@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spy School — Train Like a Spy. Defend the Future.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --black:#050505;
+    --panel:#111111;
+    --panel2:#0d0d0d;
+    --border:#1e1e1e;
+    --border2:#252525;
+    --accent:#00FF9D;
+    --accent2:#00cc7a;
+    --accent-dim:rgba(0,255,157,0.1);
+    --accent-glow:rgba(0,255,157,0.25);
+    --text-primary:#f0f0f0;
+    --text-secondary:#888;
+    --text-muted:#444;
+    --mono:'JetBrains Mono',monospace;
+    --sans:'Inter',sans-serif;
+    --display:'Syne',sans-serif;
+  }
+  html{scroll-behavior:smooth;overflow-x:hidden}
+  body{
+    background:var(--black);
+    color:var(--text-primary);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--black)}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+  /* NOISE OVERLAY */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size:256px;
+    pointer-events:none;
+    z-index:1000;
+    opacity:.4;
+  }
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:900;
+    padding:1.25rem 4rem;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid transparent;
+    transition:all .4s ease;
+  }
+  nav.scrolled{
+    background:rgba(5,5,5,.92);
+    border-bottom-color:var(--border);
+    backdrop-filter:blur(20px);
+  }
+  .nav-logo{
+    font-family:var(--display);
+    font-size:1.1rem;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--text-primary);
+    text-decoration:none;
+  }
+  .nav-logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:2.5rem;list-style:none}
+  .nav-links a{
+    font-family:var(--mono);
+    font-size:.7rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+    text-decoration:none;
+    transition:color .2s;
+  }
+  .nav-links a:hover{color:var(--accent)}
+  .nav-cta{
+    font-family:var(--mono);
+    font-size:.7rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--black);
+    background:var(--accent);
+    padding:.55rem 1.2rem;
+    border:none;
+    cursor:pointer;
+    text-decoration:none;
+    transition:all .2s;
+  }
+  .nav-cta:hover{background:var(--accent2)}
+
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:center;
+    padding:8rem 4rem 4rem;
+    gap:4rem;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-bg-grid{
+    position:absolute;inset:0;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:60px 60px;
+    opacity:.4;
+    mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+  }
+  .hero-vignette{
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse at center,transparent 0%,rgba(5,5,5,.7) 70%,var(--black) 100%);
+  }
+  .hero-left{position:relative;z-index:2}
+
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:.6rem;
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--accent);
+    border:1px solid rgba(0,255,157,.25);
+    padding:.4rem 1rem;
+    margin-bottom:2rem;
+    animation:fadeSlideUp .8s ease both;
+  }
+  .hero-badge::before{
+    content:'';
+    display:block;
+    width:6px;height:6px;
+    background:var(--accent);
+    border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+
+  @keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:.4;transform:scale(.8)}
+  }
+
+  .hero-headline{
+    font-family:var(--display);
+    font-size:clamp(2.8rem,5vw,4.5rem);
+    font-weight:800;
+    line-height:1.05;
+    letter-spacing:-.02em;
+    margin-bottom:1.5rem;
+    animation:fadeSlideUp .8s .15s ease both;
+  }
+  .hero-headline .accent{color:var(--accent)}
+  .hero-subheadline{
+    font-size:1rem;
+    color:var(--text-secondary);
+    line-height:1.75;
+    max-width:460px;
+    margin-bottom:2.5rem;
+    animation:fadeSlideUp .8s .3s ease both;
+    font-weight:300;
+  }
+  .hero-buttons{
+    display:flex;gap:1rem;
+    animation:fadeSlideUp .8s .45s ease both;
+  }
+  .btn-primary{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--black);
+    background:var(--accent);
+    padding:.85rem 2rem;
+    border:none;
+    cursor:pointer;
+    text-decoration:none;
+    transition:all .25s;
+    display:inline-block;
+  }
+  .btn-primary:hover{
+    background:#fff;
+    transform:translateY(-1px);
+    box-shadow:0 0 30px rgba(0,255,157,.3);
+  }
+  .btn-secondary{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+    background:transparent;
+    padding:.85rem 2rem;
+    border:1px solid var(--border2);
+    cursor:pointer;
+    text-decoration:none;
+    transition:all .25s;
+    display:inline-block;
+  }
+  .btn-secondary:hover{
+    color:var(--accent);
+    border-color:rgba(0,255,157,.4);
+    transform:translateY(-1px);
+  }
+
+  /* HERO DASHBOARD */
+  .hero-right{
+    position:relative;z-index:2;
+    animation:fadeSlideUp .8s .2s ease both;
+  }
+  .dashboard{
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:1.5rem;
+    position:relative;
+    overflow:hidden;
+  }
+  .dashboard::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;
+    height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    animation:scanLine 3s linear infinite;
+  }
+  @keyframes scanLine{
+    0%{transform:translateX(-100%)}
+    100%{transform:translateX(100%)}
+  }
+  .dash-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:1.25rem;
+    padding-bottom:.75rem;
+    border-bottom:1px solid var(--border);
+  }
+  .dash-title{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .dash-status{
+    display:flex;align-items:center;gap:.5rem;
+    font-family:var(--mono);
+    font-size:.6rem;
+    color:var(--text-secondary);
+  }
+  .status-dot{
+    width:5px;height:5px;
+    background:var(--accent);
+    border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+
+  /* RADAR */
+  .radar-container{
+    position:relative;
+    width:160px;height:160px;
+    margin:0 auto 1.25rem;
+  }
+  .radar-svg{width:100%;height:100%}
+  .radar-ring{fill:none;stroke:rgba(0,255,157,.15);stroke-width:.5}
+  .radar-crosshair{stroke:rgba(0,255,157,.1);stroke-width:.5}
+  .radar-sweep{
+    fill:conic-gradient(from 0deg,transparent,rgba(0,255,157,.15));
+    transform-origin:80px 80px;
+    animation:radarSweep 3s linear infinite;
+  }
+  @keyframes radarSweep{
+    0%{transform:rotate(0deg)}
+    100%{transform:rotate(360deg)}
+  }
+  .radar-dot{
+    fill:var(--accent);
+    animation:radarBlink var(--d,2.5s) var(--delay,0s) ease-in-out infinite;
+  }
+  @keyframes radarBlink{
+    0%,80%,100%{opacity:.2;r:2}
+    85%,95%{opacity:1;r:3}
+  }
+
+  /* THREAT MAP */
+  .threat-map{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    padding:1rem;
+    margin-bottom:1rem;
+    position:relative;
+    overflow:hidden;
+  }
+  .threat-label{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.12em;
+    color:var(--text-secondary);
+    text-transform:uppercase;
+    margin-bottom:.75rem;
+  }
+  .threat-bars{display:flex;flex-direction:column;gap:.4rem}
+  .threat-row{display:flex;align-items:center;gap:.75rem}
+  .threat-country{
+    font-family:var(--mono);
+    font-size:.6rem;
+    color:var(--text-secondary);
+    width:60px;text-align:right;
+    flex-shrink:0;
+  }
+  .threat-bar-bg{
+    flex:1;
+    height:3px;
+    background:var(--border);
+    position:relative;
+    overflow:hidden;
+  }
+  .threat-bar-fill{
+    height:100%;
+    background:var(--accent);
+    animation:barGrow 1.5s var(--d,.2s) ease both;
+    transform-origin:left;
+  }
+  @keyframes barGrow{
+    from{transform:scaleX(0)}
+    to{transform:scaleX(1)}
+  }
+  .threat-pct{
+    font-family:var(--mono);
+    font-size:.6rem;
+    color:var(--accent);
+    width:30px;
+    flex-shrink:0;
+  }
+
+  /* FLOATING CARDS */
+  .float-cards{display:flex;flex-direction:column;gap:.75rem}
+  .float-card{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    padding:.85rem 1rem;
+    display:flex;align-items:center;gap:1rem;
+    transition:all .3s;
+  }
+  .float-card:hover{
+    border-color:rgba(0,255,157,.3);
+    background:rgba(0,255,157,.03);
+  }
+  .card-icon{
+    width:32px;height:32px;
+    border:1px solid var(--border2);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    font-size:.9rem;
+  }
+  .card-content{flex:1}
+  .card-label{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+    margin-bottom:.2rem;
+  }
+  .card-value{
+    font-family:var(--display);
+    font-size:.85rem;
+    font-weight:700;
+    color:var(--text-primary);
+  }
+  .card-metric{
+    font-family:var(--mono);
+    font-size:.65rem;
+    color:var(--accent);
+  }
+
+  /* TERMINAL LINE */
+  .terminal-line{
+    display:flex;align-items:center;gap:.5rem;
+    margin-top:1rem;
+    padding:.6rem .75rem;
+    background:rgba(0,0,0,.5);
+    border:1px solid var(--border);
+    font-family:var(--mono);
+    font-size:.6rem;
+    color:var(--accent);
+  }
+  .terminal-prompt{color:var(--text-muted)}
+  .terminal-cursor{
+    display:inline-block;
+    width:5px;height:10px;
+    background:var(--accent);
+    animation:blink .8s infinite;
+    vertical-align:middle;
+    margin-left:2px;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  /* SOCIAL PROOF */
+  .proof-strip{
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:1.25rem 4rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4rem;
+    overflow:hidden;
+    position:relative;
+  }
+  .proof-item{
+    display:flex;align-items:center;gap:.75rem;
+    opacity:0;
+    animation:fadeSlideUp .6s ease both;
+    white-space:nowrap;
+  }
+  .proof-icon{
+    width:28px;height:28px;
+    border:1px solid var(--border2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;
+    flex-shrink:0;
+  }
+  .proof-label{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+  }
+  .proof-label strong{color:var(--text-primary);font-weight:500}
+  .proof-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+
+  /* SECTION BASE */
+  section{padding:8rem 4rem}
+  .section-label{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:1.25rem;
+    display:flex;align-items:center;gap:.75rem;
+  }
+  .section-label::before{
+    content:'';
+    display:block;
+    width:24px;height:1px;
+    background:var(--accent);
+  }
+  .section-title{
+    font-family:var(--display);
+    font-size:clamp(2rem,3.5vw,3rem);
+    font-weight:800;
+    line-height:1.1;
+    letter-spacing:-.02em;
+    margin-bottom:1rem;
+  }
+  .section-sub{
+    font-size:.95rem;
+    color:var(--text-secondary);
+    max-width:500px;
+    font-weight:300;
+    line-height:1.75;
+  }
+
+  /* MISSIONS */
+  .missions-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    margin-top:4rem;
+    background:var(--border);
+    border:1px solid var(--border);
+  }
+  .mission-card{
+    background:var(--panel);
+    padding:2.5rem;
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    transition:background .3s;
+  }
+  .mission-card::after{
+    content:'';
+    position:absolute;
+    bottom:0;left:0;right:0;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    transform:scaleX(0);
+    transition:transform .4s ease;
+  }
+  .mission-card:hover{background:rgba(0,255,157,.04)}
+  .mission-card:hover::after{transform:scaleX(1)}
+  .mission-card:hover .mission-number{color:var(--accent)}
+  .mission-card:hover .mission-icon-bg{border-color:rgba(0,255,157,.4);background:rgba(0,255,157,.08)}
+  .mission-number{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.15em;
+    color:var(--text-muted);
+    margin-bottom:1.75rem;
+    transition:color .3s;
+  }
+  .mission-icon-bg{
+    width:52px;height:52px;
+    border:1px solid var(--border2);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:1.5rem;
+    font-size:1.3rem;
+    transition:all .3s;
+  }
+  .mission-title{
+    font-family:var(--display);
+    font-size:1.3rem;
+    font-weight:700;
+    margin-bottom:.75rem;
+    letter-spacing:-.01em;
+  }
+  .mission-desc{
+    font-size:.88rem;
+    color:var(--text-secondary);
+    line-height:1.7;
+    font-weight:300;
+    margin-bottom:1.75rem;
+  }
+  .mission-tags{display:flex;flex-wrap:wrap;gap:.4rem}
+  .tag{
+    font-family:var(--mono);
+    font-size:.58rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    border:1px solid var(--border);
+    padding:.25rem .6rem;
+  }
+  .mission-card:hover .tag{border-color:var(--border2);color:var(--text-secondary)}
+  .mission-arrow{
+    position:absolute;top:2rem;right:2rem;
+    font-size:.85rem;
+    color:var(--text-muted);
+    transition:all .3s;
+    opacity:0;
+    transform:translate(-4px,4px);
+  }
+  .mission-card:hover .mission-arrow{opacity:1;transform:translate(0,0);color:var(--accent)}
+
+  /* HOW IT WORKS */
+  .how-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:2px;
+    margin-top:4rem;
+    position:relative;
+  }
+  .how-connector{
+    position:absolute;
+    top:3.5rem;
+    left:calc(33.33% - 8px);
+    width:calc(33.33%);
+    height:1px;
+    background:linear-gradient(90deg,var(--border2),var(--accent),var(--border2));
+    z-index:1;
+    opacity:.5;
+  }
+  .how-connector:last-of-type{left:calc(66.66% - 8px)}
+  .how-step{
+    padding:2rem;
+    position:relative;
+    z-index:2;
+    opacity:0;
+    transform:translateY(20px);
+    transition:all .6s ease;
+  }
+  .how-step.visible{opacity:1;transform:translateY(0)}
+  .step-number{
+    font-family:var(--mono);
+    font-size:2.5rem;
+    font-weight:500;
+    color:var(--border2);
+    margin-bottom:1.5rem;
+    line-height:1;
+    transition:color .3s;
+  }
+  .how-step:hover .step-number{color:var(--accent)}
+  .step-title{
+    font-family:var(--display);
+    font-size:1.2rem;
+    font-weight:700;
+    margin-bottom:.6rem;
+  }
+  .step-desc{
+    font-size:.85rem;
+    color:var(--text-secondary);
+    line-height:1.7;
+    font-weight:300;
+  }
+  .step-icon{
+    width:60px;height:60px;
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.5rem;
+    margin-bottom:1.5rem;
+  }
+
+  /* STATS STRIP */
+  .stats-strip{
+    background:var(--panel);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background-color:var(--border);
+  }
+  .stat-cell{
+    background:var(--panel);
+    padding:3rem 2.5rem;
+    text-align:center;
+    opacity:0;
+    transition:all .6s ease;
+  }
+  .stat-cell.visible{opacity:1}
+  .stat-cell:hover{background:rgba(0,255,157,.03)}
+  .stat-num{
+    font-family:var(--display);
+    font-size:2.5rem;
+    font-weight:800;
+    color:var(--accent);
+    letter-spacing:-.02em;
+    display:block;
+    margin-bottom:.4rem;
+  }
+  .stat-label{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+  }
+
+  /* CTA SECTION */
+  .cta-section{
+    padding:10rem 4rem;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .cta-bg-glow{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:600px;height:300px;
+    background:radial-gradient(ellipse,rgba(0,255,157,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .cta-headline{
+    font-family:var(--display);
+    font-size:clamp(2.5rem,5vw,4rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.1;
+    margin-bottom:1.25rem;
+    position:relative;z-index:1;
+  }
+  .cta-sub{
+    font-size:1rem;
+    color:var(--text-secondary);
+    margin-bottom:3rem;
+    font-weight:300;
+    position:relative;z-index:1;
+  }
+  .cta-buttons{
+    display:flex;justify-content:center;gap:1rem;
+    position:relative;z-index:1;
+  }
+
+  /* FOOTER */
+  footer{
+    border-top:1px solid var(--border);
+    padding:2rem 4rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .footer-logo{
+    font-family:var(--display);
+    font-weight:800;
+    font-size:.85rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+  .footer-logo span{color:var(--accent)}
+  .footer-copy{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.1em;
+    color:var(--text-muted);
+  }
+  .footer-clearance{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.1em;
+    color:var(--text-muted);
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .footer-clearance::before{
+    content:'';
+    width:5px;height:5px;
+    border:1px solid var(--text-muted);
+    display:block;
+    transform:rotate(45deg);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeSlideUp{
+    from{opacity:0;transform:translateY(24px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .reveal{
+    opacity:0;
+    transform:translateY(24px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible{opacity:1;transform:translateY(0)}
+
+  /* PARTICLES */
+  #particles{
+    position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+  }
+
+  /* SCROLLBAR-WIDTH NONE for snappiness */
+  .proof-strip{scrollbar-width:none}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<canvas id="particles"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Dossier<span>·</span></a>
+  <ul class="nav-links">
+    <li><a href="#missions">Missions</a></li>
+    <li><a href="#how">Protocol</a></li>
+    <li><a href="#intel">Intel</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Enlist Now</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-vignette"></div>
+
+  <div class="hero-left">
+    <div class="hero-badge">Active Operations — Clearance Required</div>
+    <h1 class="hero-headline">
+      Train Like<br>a Spy.<br>
+      <span class="accent">Defend</span><br>the Future.
+    </h1>
+    <p class="hero-subheadline">
+      Master deception detection, interrogation psychology, and cyber defense through immersive AI-powered missions.
+    </p>
+    <div class="hero-buttons">
+      <a href="#" class="btn-primary">Begin Training</a>
+      <a href="#missions" class="btn-secondary">View Missions →</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="dashboard">
+      <div class="dash-header">
+        <span class="dash-title">// Intelligence Dashboard</span>
+        <span class="dash-status">
+          <span class="status-dot"></span>
+          LIVE FEED — ACTIVE
+        </span>
+      </div>
+
+      <!-- Radar -->
+      <div class="radar-container">
+        <svg class="radar-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#00FF9D" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#00FF9D" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- rings -->
+          <circle cx="80" cy="80" r="70" class="radar-ring"/>
+          <circle cx="80" cy="80" r="52" class="radar-ring"/>
+          <circle cx="80" cy="80" r="35" class="radar-ring"/>
+          <circle cx="80" cy="80" r="18" class="radar-ring"/>
+          <!-- crosshairs -->
+          <line x1="80" y1="10" x2="80" y2="150" class="radar-crosshair"/>
+          <line x1="10" y1="80" x2="150" y2="80" class="radar-crosshair"/>
+          <!-- sweep -->
+          <g id="sweep" style="transform-origin:80px 80px;animation:radarSweep 3s linear infinite">
+            <path d="M80,80 L80,10 A70,70 0 0,1 150,80 Z" fill="url(#radarGrad)"/>
+            <line x1="80" y1="80" x2="80" y2="10" stroke="rgba(0,255,157,.5)" stroke-width="1"/>
+          </g>
+          <!-- dots -->
+          <circle cx="52" cy="44" r="2.5" class="radar-dot" fill="#00FF9D" style="--delay:0s;--d:3s;animation:radarBlink 3s 0s ease-in-out infinite"/>
+          <circle cx="115" cy="65" r="2.5" class="radar-dot" fill="#00FF9D" style="--delay:.8s;--d:2.5s;animation:radarBlink 2.5s .8s ease-in-out infinite"/>
+          <circle cx="88" cy="118" r="2.5" class="radar-dot" fill="#00FF9D" style="--delay:1.5s;--d:3.5s;animation:radarBlink 3.5s 1.5s ease-in-out infinite"/>
+          <circle cx="35" cy="92" r="2.5" class="radar-dot" fill="#00FF9D" style="--delay:.3s;--d:2.8s;animation:radarBlink 2.8s .3s ease-in-out infinite"/>
+        </svg>
+      </div>
+
+      <!-- Threat Bars -->
+      <div class="threat-map">
+        <div class="threat-label">// Global Threat Index</div>
+        <div class="threat-bars">
+          <div class="threat-row">
+            <span class="threat-country">APT-41</span>
+            <div class="threat-bar-bg"><div class="threat-bar-fill" style="width:87%;--d:.1s"></div></div>
+            <span class="threat-pct">87%</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-country">APT-28</span>
+            <div class="threat-bar-bg"><div class="threat-bar-fill" style="width:72%;--d:.25s"></div></div>
+            <span class="threat-pct">72%</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-country">Lazarus</span>
+            <div class="threat-bar-bg"><div class="threat-bar-fill" style="width:61%;--d:.4s"></div></div>
+            <span class="threat-pct">61%</span>
+          </div>
+          <div class="threat-row">
+            <span class="threat-country">DarkSide</span>
+            <div class="threat-bar-bg"><div class="threat-bar-fill" style="width:45%;--d:.55s"></div></div>
+            <span class="threat-pct">45%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Cards -->
+      <div class="float-cards">
+        <div class="float-card">
+          <div class="card-icon">◉</div>
+          <div class="card-content">
+            <div class="card-label">Mission Clearance</div>
+            <div class="card-value">Level 3 — CLASSIFIED</div>
+          </div>
+          <div class="card-metric">Active</div>
+        </div>
+        <div class="float-card">
+          <div class="card-icon">⬡</div>
+          <div class="card-content">
+            <div class="card-label">Threat Intelligence</div>
+            <div class="card-value">2,847 Vectors Mapped</div>
+          </div>
+          <div class="card-metric">+12 new</div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-line">
+        <span class="terminal-prompt">$</span>
+        <span id="terminal-text"></span>
+        <span class="terminal-cursor"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<div class="proof-strip">
+  <div class="proof-item" style="animation-delay:.1s">
+    <div class="proof-icon">✦</div>
+    <div class="proof-label"><strong>Built with Gemini</strong></div>
+  </div>
+  <div class="proof-divider"></div>
+  <div class="proof-item" style="animation-delay:.25s">
+    <div class="proof-icon">◎</div>
+    <div class="proof-label"><strong>Voice by ElevenLabs</strong></div>
+  </div>
+  <div class="proof-divider"></div>
+  <div class="proof-item" style="animation-delay:.4s">
+    <div class="proof-icon">⬡</div>
+    <div class="proof-label"><strong>AI-Powered Learning</strong></div>
+  </div>
+  <div class="proof-divider"></div>
+  <div class="proof-item" style="animation-delay:.55s">
+    <div class="proof-icon">◉</div>
+    <div class="proof-label"><strong>Adaptive Intelligence</strong></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip" id="intel">
+  <div class="stat-cell reveal">
+    <span class="stat-num">12K+</span>
+    <span class="stat-label">Operatives Enrolled</span>
+  </div>
+  <div class="stat-cell reveal" style="transition-delay:.15s">
+    <span class="stat-num">94%</span>
+    <span class="stat-label">Mission Completion</span>
+  </div>
+  <div class="stat-cell reveal" style="transition-delay:.3s">
+    <span class="stat-num">240+</span>
+    <span class="stat-label">Threat Scenarios</span>
+  </div>
+  <div class="stat-cell reveal" style="transition-delay:.45s">
+    <span class="stat-num">3.2s</span>
+    <span class="stat-label">Avg AI Response</span>
+  </div>
+</div>
+
+<!-- MISSIONS -->
+<section id="missions">
+  <div class="section-label">Active Directives</div>
+  <h2 class="section-title reveal">Three Paths.<br>One Agency.</h2>
+  <p class="section-sub reveal" style="transition-delay:.15s">Each mission is an AI-constructed scenario drawn from real-world intelligence challenges. No two runs are identical.</p>
+  <div class="missions-grid">
+
+    <div class="mission-card reveal">
+      <div class="mission-arrow">↗</div>
+      <div class="mission-number">// MISSION 01</div>
+      <div class="mission-icon-bg">⬡</div>
+      <h3 class="mission-title">Deepfake Detection</h3>
+      <p class="mission-desc">Intercept AI-generated misinformation campaigns. Analyze synthetic media, trace fabricated evidence, and dismantle coordinated disinformation networks before they reach the public.</p>
+      <div class="mission-tags">
+        <span class="tag">Computer Vision</span>
+        <span class="tag">Media Forensics</span>
+        <span class="tag">Adversarial AI</span>
+      </div>
+    </div>
+
+    <div class="mission-card reveal" style="transition-delay:.15s">
+      <div class="mission-arrow">↗</div>
+      <div class="mission-number">// MISSION 02</div>
+      <div class="mission-icon-bg">◉</div>
+      <h3 class="mission-title">Interrogation Training</h3>
+      <p class="mission-desc">Conduct high-stakes interrogations against AI suspects trained on behavioral psychology. Detect contradiction, exploit cognitive bias, and extract truth without a single misstep.</p>
+      <div class="mission-tags">
+        <span class="tag">Psychology</span>
+        <span class="tag">Behavioral AI</span>
+        <span class="tag">Logic Traps</span>
+      </div>
+    </div>
+
+    <div class="mission-card reveal" style="transition-delay:.3s">
+      <div class="mission-arrow">↗</div>
+      <div class="mission-number">// MISSION 03</div>
+      <div class="mission-icon-bg">◈</div>
+      <h3 class="mission-title">Cyber Defense</h3>
+      <p class="mission-desc">Defend classified infrastructure against evolving AI-powered intrusions. Respond to zero-day exploits, neutralize breaches in real time, and fortify systems under live attack.</p>
+      <div class="mission-tags">
+        <span class="tag">Network Security</span>
+        <span class="tag">Threat Response</span>
+        <span class="tag">AI Intrusion</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" style="background:var(--panel2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section-label">Operational Protocol</div>
+  <h2 class="section-title reveal">Three Stages.<br>One Objective.</h2>
+  <p class="section-sub reveal" style="transition-delay:.15s">From raw recruit to field-certified operative — your path is structured, adaptive, and uncompromising.</p>
+
+  <div class="how-grid">
+    <div class="how-connector"></div>
+    <div class="how-connector"></div>
+
+    <div class="how-step reveal">
+      <div class="step-number">01</div>
+      <div class="step-icon">◉</div>
+      <h3 class="step-title">Enroll</h3>
+      <p class="step-desc">Complete security clearance profiling. Our AI builds a personalized threat landscape calibrated to your cognitive baseline and existing skill set.</p>
+    </div>
+
+    <div class="how-step reveal" style="transition-delay:.2s">
+      <div class="step-number">02</div>
+      <div class="step-icon">⬡</div>
+      <h3 class="step-title">Train</h3>
+      <p class="step-desc">Engage immersive AI-driven missions that adapt in real time. Each scenario escalates based on performance — no ceiling, no easy paths.</p>
+    </div>
+
+    <div class="how-step reveal" style="transition-delay:.4s">
+      <div class="step-number">03</div>
+      <div class="step-icon">◈</div>
+      <h3 class="step-title">Graduate</h3>
+      <p class="step-desc">Earn field certification validated against real-world threat intelligence. Join a classified network of operatives shaping the future of digital defense.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg-glow"></div>
+  <div class="section-label reveal" style="justify-content:center">Begin Your Briefing</div>
+  <h2 class="cta-headline reveal" style="transition-delay:.1s">
+    The Agency is<br>
+    <span style="color:var(--accent)">Recruiting Now.</span>
+  </h2>
+  <p class="cta-sub reveal" style="transition-delay:.2s">Every day you wait, the threats evolve. Don't fall behind the intelligence curve.</p>
+  <div class="cta-buttons reveal" style="transition-delay:.3s">
+    <a href="#" class="btn-primary">Begin Training →</a>
+    <a href="#" class="btn-secondary">Request Intel Brief</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Dossier</div>
+  <div class="footer-copy">© 2025 Dossier Sex School — All rights classified.</div>
+  <div class="footer-clearance">Clearance Level: Open</div>
+</footer>
+
+<script>
+// PARTICLES
+(function(){
+  const canvas=document.getElementById('particles');
+  const ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  function resize(){
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+
+  for(let i=0;i<60;i++){
+    particles.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight,
+      vx:(Math.random()-.5)*.2,
+      vy:(Math.random()-.5)*.2,
+      size:Math.random()*1.5+.5,
+      opacity:Math.random()*.3+.05
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,255,157,${p.opacity})`;
+      ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// NAV SCROLL
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+// INTERSECTION OBSERVER
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('.reveal, .stat-cell, .how-step').forEach(el=>observer.observe(el));
+
+// TERMINAL TYPING
+const lines=[
+  'initializing mission protocol...',
+  'scanning threat vectors...',
+  'clearance verified. welcome, operative.',
+  'loading intelligence modules...',
+  'system online. begin training.'
+];
+let lineIdx=0,charIdx=0,el=document.getElementById('terminal-text');
+function type(){
+  if(!el)return;
+  if(charIdx<lines[lineIdx].length){
+    el.textContent=lines[lineIdx].slice(0,++charIdx);
+    setTimeout(type,55);
+  } else {
+    setTimeout(()=>{
+      el.textContent='';
+      charIdx=0;
+      lineIdx=(lineIdx+1)%lines.length;
+      type();
+    },2200);
+  }
+}
+type();
+</script>
+</body>
+</html>
