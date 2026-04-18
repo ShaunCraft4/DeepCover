@@ -98,6 +98,7 @@
     transition:all .2s;
   }
   .nav-cta:hover{background:var(--accent2)}
+  button.btn-primary{font:inherit}
 
   /* HERO */
   .hero{
@@ -736,6 +737,238 @@
 
   /* SCROLLBAR-WIDTH NONE for snappiness */
   .proof-strip{scrollbar-width:none}
+
+  /* APP SCREENS — briefing / missions (dossier HUD) */
+  body.dossier-app-lock{overflow:hidden}
+  .dossier-screen{
+    position:fixed;inset:0;z-index:2000;
+    background:var(--black);
+    overflow:auto;
+    display:none;
+    padding:clamp(1.25rem,4vw,3rem);
+  }
+  .dossier-screen::after{
+    content:'';
+    position:fixed;inset:0;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:60px 60px;
+    opacity:.25;
+    pointer-events:none;
+    z-index:0;
+    mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,black 20%,transparent 75%);
+  }
+  .dossier-screen.is-open{display:block}
+  .dossier-screen-inner{
+    max-width:1100px;margin:0 auto;
+    min-height:100%;
+    display:flex;flex-direction:column;
+    position:relative;
+    z-index:1;
+  }
+  .dossier-screen-header{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:1rem;margin-bottom:2.5rem;padding-bottom:1.25rem;
+    border-bottom:1px solid var(--border);
+  }
+  .dossier-kicker{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:.5rem;
+  }
+  .dossier-screen-title{
+    font-family:var(--display);
+    font-size:clamp(1.5rem,3.5vw,2.25rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.15;
+  }
+  .dossier-screen-sub{
+    font-size:.9rem;
+    color:var(--text-secondary);
+    max-width:520px;
+    margin-top:.75rem;
+    font-weight:300;
+    line-height:1.65;
+  }
+  .dossier-userbar{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.08em;
+    color:var(--text-muted);
+    text-align:right;
+    flex-shrink:0;
+  }
+  .dossier-userbar strong{color:var(--text-secondary);font-weight:500}
+  .dossier-link-btn{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:none;border:none;
+    cursor:pointer;
+    margin-top:.5rem;
+    text-decoration:underline;text-underline-offset:3px;
+  }
+  .dossier-link-btn:hover{color:#fff}
+
+  .mission-select-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1rem;
+    flex:1;
+    align-content:start;
+  }
+  @media(min-width:900px){
+    .mission-select-grid{grid-template-columns:repeat(3,1fr);gap:1.25rem;align-items:stretch}
+  }
+  .mission-select-btn{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-end;
+    min-height:200px;
+    padding:2rem;
+    background:var(--panel);
+    border:1px solid var(--border);
+    cursor:pointer;
+    text-align:left;
+    color:inherit;
+    font:inherit;
+    transition:background .25s,border-color .25s,transform .2s;
+    overflow:hidden;
+  }
+  .mission-select-btn::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    transform:scaleX(0);
+    transition:transform .4s ease;
+  }
+  .mission-select-btn:hover{
+    background:rgba(0,255,157,.06);
+    border-color:rgba(0,255,157,.35);
+    transform:translateY(-2px);
+    box-shadow:0 0 40px var(--accent-glow);
+  }
+  .mission-select-btn:hover::before{transform:scaleX(1)}
+  .mission-select-btn:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+  }
+  .mission-select-num{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.15em;
+    color:var(--text-muted);
+    margin-bottom:1rem;
+  }
+  .mission-select-btn:hover .mission-select-num{color:var(--accent)}
+  .mission-select-icon{
+    width:56px;height:56px;
+    border:1px solid var(--border2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:1.25rem;
+    font-size:1.4rem;
+    transition:border-color .25s,background .25s;
+  }
+  .mission-select-btn:hover .mission-select-icon{
+    border-color:rgba(0,255,157,.45);
+    background:rgba(0,255,157,.08);
+  }
+  .mission-select-name{
+    font-family:var(--display);
+    font-size:clamp(1.15rem,2.5vw,1.45rem);
+    font-weight:700;
+    margin-bottom:.5rem;
+    letter-spacing:-.01em;
+  }
+  .mission-select-hint{
+    font-size:.82rem;
+    color:var(--text-secondary);
+    line-height:1.55;
+    font-weight:300;
+  }
+  .mission-select-go{
+    font-family:var(--mono);
+    font-size:.58rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-top:1.25rem;
+    opacity:.85;
+  }
+  .mission-select-btn:hover .mission-select-go{opacity:1}
+
+  .mission-stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .mission-stage-badge{
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.15em;
+    color:var(--accent);
+    border:1px solid rgba(0,255,157,.25);
+    padding:.4rem 1rem;
+    display:inline-flex;
+    margin-bottom:2rem;
+  }
+  .mission-stage-headline{
+    font-family:var(--display);
+    font-size:clamp(2rem,4vw,2.75rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    margin-bottom:1rem;
+  }
+  .mission-stage-body{
+    font-size:.95rem;
+    color:var(--text-secondary);
+    max-width:640px;
+    line-height:1.75;
+    font-weight:300;
+    margin-bottom:2rem;
+  }
+  .dossier-back-row{display:flex;gap:1rem;flex-wrap:wrap;margin-top:auto;padding-top:2rem}
+  .dossier-btn-ghost{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+    background:transparent;
+    border:1px solid var(--border2);
+    padding:.85rem 1.5rem;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .dossier-btn-ghost:hover{
+    color:var(--accent);
+    border-color:rgba(0,255,157,.4);
+  }
+
+  .dossier-toast{
+    position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+    z-index:3000;
+    font-family:var(--mono);
+    font-size:.62rem;
+    letter-spacing:.08em;
+    padding:.85rem 1.25rem;
+    background:var(--panel);
+    border:1px solid var(--accent);
+    color:var(--text-primary);
+    max-width:90vw;
+    display:none;
+    box-shadow:0 0 30px rgba(0,255,157,.15);
+  }
+  .dossier-toast.is-visible{display:block}
 </style>
 </head>
 <body>
@@ -751,7 +984,7 @@
     <li><a href="#how">Protocol</a></li>
     <li><a href="#intel">Intel</a></li>
   </ul>
-  <a href="#" class="nav-cta">Enlist Now</a>
+  <button type="button" class="nav-cta js-begin-training">Enlist Now</button>
 </nav>
 
 <!-- HERO -->
@@ -769,7 +1002,7 @@
       Master deception detection, interrogation psychology, and cyber defense through immersive AI-powered missions.
     </p>
     <div class="hero-buttons">
-      <a href="#" class="btn-primary">Begin Training</a>
+      <button type="button" class="btn-primary js-begin-training">Begin Training</button>
       <a href="#missions" class="btn-secondary">View Missions →</a>
     </div>
   </div>
@@ -1006,17 +1239,118 @@
   </h2>
   <p class="cta-sub reveal" style="transition-delay:.2s">Every day you wait, the threats evolve. Don't fall behind the intelligence curve.</p>
   <div class="cta-buttons reveal" style="transition-delay:.3s">
-    <a href="#" class="btn-primary">Begin Training →</a>
-    <a href="#" class="btn-secondary">Request Intel Brief</a>
+    <button type="button" class="btn-primary js-begin-training">Begin Training →</button>
+    <a href="#intel" class="btn-secondary">Request Intel Brief</a>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">Dossier</div>
-  <div class="footer-copy">© 2025 Dossier Sex School — All rights classified.</div>
+  <div class="footer-copy">© 2026 Dossier Spy School — All rights classified.</div>
   <div class="footer-clearance">Clearance Level: Open</div>
 </footer>
+
+<div id="dossier-toast" class="dossier-toast" role="status" aria-live="polite"></div>
+
+<section id="screen-mission-select" class="dossier-screen" aria-hidden="true">
+  <div class="dossier-screen-inner">
+    <header class="dossier-screen-header">
+      <div>
+        <p class="dossier-kicker">// Post-authentication briefing</p>
+        <h2 class="dossier-screen-title">Select your first directive</h2>
+        <p class="dossier-screen-sub">Choose a mission track. Progress is tied to your signed-in identity so we can resume your training across sessions.</p>
+      </div>
+      <div class="dossier-userbar">
+        <span id="dossier-user-email"></span>
+        <br>
+        <button type="button" class="dossier-link-btn" id="dossier-sign-out">Sign out</button>
+      </div>
+    </header>
+    <div class="mission-select-grid" role="group" aria-label="Mission tracks">
+      <button type="button" class="mission-select-btn" data-mission="deepfake" data-mission-route="deepfake">
+        <span class="mission-select-num">// MISSION 01</span>
+        <span class="mission-select-icon" aria-hidden="true">⬡</span>
+        <span class="mission-select-name">Deepfake Detection</span>
+        <span class="mission-select-hint">Synthetic media forensics and coordinated disinformation response.</span>
+        <span class="mission-select-go">Enter module →</span>
+      </button>
+      <button type="button" class="mission-select-btn" data-mission="interrogation" data-mission-route="interrogation">
+        <span class="mission-select-num">// MISSION 02</span>
+        <span class="mission-select-icon" aria-hidden="true">◉</span>
+        <span class="mission-select-name">Interrogation Training</span>
+        <span class="mission-select-hint">Behavioral psychology against AI-generated suspects.</span>
+        <span class="mission-select-go">Enter module →</span>
+      </button>
+      <button type="button" class="mission-select-btn" data-mission="cyber" data-mission-route="cyber">
+        <span class="mission-select-num">// MISSION 03</span>
+        <span class="mission-select-icon" aria-hidden="true">◈</span>
+        <span class="mission-select-name">Cyber Defense</span>
+        <span class="mission-select-hint">Intrusion response, breach neutralization, live infrastructure defense.</span>
+        <span class="mission-select-go">Enter module →</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-mission-deepfake" class="dossier-screen" aria-hidden="true">
+  <div class="dossier-screen-inner mission-stage">
+    <header class="dossier-screen-header">
+      <div>
+        <p class="dossier-kicker">// Mission 01 — Active</p>
+        <h2 class="dossier-screen-title">Deepfake Detection</h2>
+        <p class="dossier-screen-sub">Intercept AI-generated misinformation. This module interface is ready for your scenario logic and Gemini / media pipelines.</p>
+      </div>
+    </header>
+    <div class="mission-stage-badge">STATUS — SESSION LIVE</div>
+    <h3 class="mission-stage-headline">Forensic pipeline armed.</h3>
+    <p class="mission-stage-body">You are cleared to run synthetic media analysis exercises. Progress for this track is recorded under your account when the <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">user_progress</code> table is configured in Supabase.</p>
+    <div class="dossier-back-row">
+      <button type="button" class="dossier-btn-ghost js-back-to-select">← Mission briefing</button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-mission-interrogation" class="dossier-screen" aria-hidden="true">
+  <div class="dossier-screen-inner mission-stage">
+    <header class="dossier-screen-header">
+      <div>
+        <p class="dossier-kicker">// Mission 02 — Active</p>
+        <h2 class="dossier-screen-title">Interrogation Training</h2>
+        <p class="dossier-screen-sub">High-stakes dialogue against behavioral AI suspects. Wire ElevenLabs voice and Gemini dialogue here.</p>
+      </div>
+    </header>
+    <div class="mission-stage-badge">STATUS — INTERROGATION ROOM</div>
+    <h3 class="mission-stage-headline">The subject is waiting.</h3>
+    <p class="mission-stage-body">Contradiction mapping and cognitive pressure scenarios will attach to this screen. Your started timestamp syncs to Supabase when progress storage is enabled.</p>
+    <div class="dossier-back-row">
+      <button type="button" class="dossier-btn-ghost js-back-to-select">← Mission briefing</button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-mission-cyber" class="dossier-screen" aria-hidden="true">
+  <div class="dossier-screen-inner mission-stage">
+    <header class="dossier-screen-header">
+      <div>
+        <p class="dossier-kicker">// Mission 03 — Active</p>
+        <h2 class="dossier-screen-title">Cyber Defense</h2>
+        <p class="dossier-screen-sub">Respond to AI-augmented intrusions against classified infrastructure. Simulation hooks go on this layer.</p>
+      </div>
+    </header>
+    <div class="mission-stage-badge">STATUS — NETWORK UNDER ATTACK</div>
+    <h3 class="mission-stage-headline">Defensive countermeasures online.</h3>
+    <p class="mission-stage-body">Use this view for timelines, log streams, and escalation drills. Progress merges into your operative record alongside other missions.</p>
+    <div class="dossier-back-row">
+      <button type="button" class="dossier-btn-ghost js-back-to-select">← Mission briefing</button>
+    </div>
+  </div>
+</section>
+
+<!-- Auth + missions: keys from .env via Vite (see src/env.js, src/dossier-app.js). Run: npm run dev
+     Supabase: Auth → Google; URL config must include this origin (e.g. http://localhost:5173).
+     Optional SQL: user_progress table + RLS (same as previous revision). -->
+<script type="module" src="/src/dossier-app.js"></script>
 
 <script>
 // PARTICLES
