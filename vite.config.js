@@ -1,4 +1,8 @@
 import { defineConfig } from 'vite';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const mission1Proxy = {
   "/mission1": {
@@ -19,5 +23,13 @@ export default defineConfig({
   preview: {
     port: 4173,
     proxy: mission1Proxy,
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        mission2: resolve(__dirname, 'Mission2/index.html'),
+      },
+    },
   },
 });

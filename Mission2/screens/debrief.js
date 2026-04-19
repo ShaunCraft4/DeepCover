@@ -1,184 +1,211 @@
-import { getState, resetState } from "../lib/store.js";
-import { getSession, deleteSession } from "../api/supabase.js";
+import { getState, resetState } from '../lib/store.js';
 
-function computeXp({ clearanceLevel, turnCount, codeRevealed }) {
-  const clearanceMultiplier = [1.0, 1.7, 3.0][clearanceLevel - 1] ?? 1;
-  const speedBonus = Math.max(1.0, 1.5 - turnCount / 20);
-  const baseScore = codeRevealed ? Math.max(40, 100 - turnCount * 3) : 20;
-  return Math.round(baseScore * clearanceMultiplier * speedBonus);
+/**
+ * @param {'http_unencrypted' | 'typosquatting' | 'phishing'} t
+ */
+function totalInDataset(packets, t) {
+  return packets.filter(p => p.threatType === t && p.isMalicious).length;
 }
 
-function ratingLine(turnCount) {
-  if (turnCount <= 8) return "ELITE — Field Ready";
-  if (turnCount <= 14) return "PROFICIENT — Cleared for Deployment";
-  return "DEVELOPING — Mission Complete";
+/**
+ * @param {'http_unencrypted' | 'typosquatting' | 'phishing'} t
+ */
+function caughtCount(decisions, t) {
+  return decisions.filter(d => {
+    if (d.kind !== 'decision') return false;
+    if (d.playerChoice !== 'block') return false;
+    return d.wasCorrect && d.packet.threatType === t;
+  }).length;
 }
 
-function formatElapsed(ms) {
-  if (ms == null || Number.isNaN(ms)) return "—";
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${String(r).padStart(2, "0")}`;
-}
+/**
+ * @param {HTMLElement} root
+ */
+export function mountDebrief(root) {
+  const state = getState();
+  const packets = state.packets;
+  const decisions = state.decisions;
+  const score = Math.max(0, Math.min(100, Math.round(state.score)));
+  const clearanceLevel = /** @type {1|2|3} */ (state.clearanceLevel ?? 1);
+  const totalPkt = state.totalPackets || packets.length || 40;
 
-export function renderDebrief(container) {
-  const initial = getState();
-  container.innerHTML = `<main class="screen screen--debrief"><p class="mono debrief-loading">DECRYPTING DEBRIEF…</p></main>`;
+  const correctBlocks = decisions.filter(
+    d => d.kind === 'decision' && d.playerChoice === 'block' && d.wasCorrect
+  ).length;
+  const wrongAllows = decisions.filter(
+    d => d.kind === 'decision' && d.playerChoice === 'allow' && !d.wasCorrect
+  ).length;
+  const wrongBlocks = decisions.filter(
+    d => d.kind === 'decision' && d.playerChoice === 'block' && !d.wasCorrect
+  ).length;
 
-  void (async () => {
-    let row = null;
-    try {
-      row = await getSession(initial.sessionId);
-    } catch (e) {
-      console.error(e);
-    }
+  const missedMalicious = decisions.filter(d => d.kind === 'miss' && d.packet.isMalicious);
 
-    const full = row?.full_suspect ?? {};
-    const fatalFlaw = full.fatal_flaw ?? "—";
-    const hiddenTruth = row?.hidden_truth ?? full.hidden_truth ?? "—";
-    const alibiLocation = full.alibi_location ?? "—";
-    const secretFromDb = row?.secret_code ?? full.secret_code ?? "";
-    const name = initial.suspect?.name ?? full.name ?? "Subject";
+  const httpTotal = totalInDataset(packets, 'http_unencrypted');
+  const typoTotal = totalInDataset(packets, 'typosquatting');
+  const phishTotal = totalInDataset(packets, 'phishing');
 
-    const clearanceLevel = initial.clearanceLevel ?? 1;
-    const turnCount = initial.turnCount ?? 0;
-    const contradictionsCaught = initial.contradictionsCaught ?? 0;
-    const codeRevealed = initial.codeRevealed ?? false;
-    const extractedCode = initial.extractedCode ?? "";
-    const result = initial.result ?? "loss";
-    const elapsed = formatElapsed(Date.now() - (initial.missionStartTime ?? Date.now()));
+  const httpCaught = caughtCount(decisions, 'http_unencrypted');
+  const typoCaught = caughtCount(decisions, 'typosquatting');
+  const phishCaught = caughtCount(decisions, 'phishing');
 
-    const xp = computeXp({ clearanceLevel, turnCount, codeRevealed });
+  let headerText = 'NETWORK COMPROMISED';
+  let headerClass = 'debrief-head--red';
+  if (score >= 85) {
+    headerText = 'PERIMETER SECURED';
+    headerClass = 'debrief-head--emerald';
+  } else if (score >= 60) {
+    headerText = 'BREACH CONTAINED';
+    headerClass = 'debrief-head--white';
+  } else if (score >= 40) {
+    headerText = 'SIGNIFICANT EXPOSURE';
+    headerClass = 'debrief-head--amber';
+  }
 
-    const isWin = result === "win" && codeRevealed;
+  const clearanceMultiplier = [1.0, 1.7, 3.0][clearanceLevel - 1];
+  const xp = Math.round(score * clearanceMultiplier);
 
-    container.innerHTML = `
-      <main class="screen screen--debrief">
-        <div class="debrief-inner">
-          <h1 class="debrief-title syne fade-slide-up">${isWin ? "MISSION COMPLETE" : "MISSION FAILED"}</h1>
-          <div class="rule-line debrief-rule fade-slide-up" style="animation-delay:0.1s" aria-hidden="true"></div>
+  root.innerHTML = `
+    <div class="debrief-screen">
+      <h2 class="debrief-head ${headerClass} debrief-reveal" style="animation-delay:0ms">${headerText}</h2>
 
-          <div class="debrief-blocks">
-            ${
-              isWin
-                ? `
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.2s">
-                <p class="mono debrief-label">CODE EXTRACTED</p>
-                <div class="code-box tension-pulse mono" data-code-display>
-                  ${String(extractedCode || secretFromDb)
-                    .slice(0, 4)
-                    .split("")
-                    .map((d) => `<span class="code-digit">${escapeHtml(d)}</span>`)
-                    .join("")}
-                </div>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.35s">
-                <p class="mono debrief-label">THE LIE THAT BROKE THEM:</p>
-                <p class="mono debrief-emerald" data-typewriter-flaw></p>
-              </section>
-              <section class="debrief-section fade-slide-up debrief-truth-block" style="animation-delay:0.5s">
-                <p class="mono debrief-label">THE TRUTH:</p>
-                <p class="inter-body debrief-truth" data-truth hidden>${escapeHtml(hiddenTruth)}</p>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.65s">
-                <p class="mono debrief-label">PERFORMANCE</p>
-                <ul class="mono debrief-stats">
-                  <li>Questions used: ${turnCount} / 20</li>
-                  <li>Contradictions: ${contradictionsCaught} caught</li>
-                  <li>Time: ${elapsed}</li>
-                </ul>
-                <p class="mono debrief-rating">Rating: ${ratingLine(turnCount)}</p>
-              </section>
-            `
-                : `
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.2s">
-                <p class="mono debrief-label">CODE NOT EXTRACTED</p>
-                <p class="inter-body">${escapeHtml(name)} did not break.</p>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.35s">
-                <p class="mono debrief-label">THE LIE YOU MISSED:</p>
-                <p class="mono debrief-danger">${escapeHtml(fatalFlaw)}</p>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.5s">
-                <p class="mono debrief-label">WHAT YOU NEEDED TO SAY:</p>
-                <p class="inter-body">Something referencing: ${escapeHtml(alibiLocation)} — ${escapeHtml(fatalFlaw)}</p>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.65s">
-                <p class="mono debrief-label">THE TRUTH (classified):</p>
-                <p class="inter-body">${escapeHtml(hiddenTruth)}</p>
-              </section>
-              <section class="debrief-section fade-slide-up" style="animation-delay:0.8s">
-                <p class="mono">Questions wasted: ${turnCount} / 20</p>
-              </section>
-            `
-            }
+      <div class="debrief-block debrief-reveal" style="animation-delay:1100ms">
+        <h3 class="debrief-sub">SESSION COMPLETE</h3>
+        <p class="debrief-score-hero" aria-live="polite">${score}%</p>
+        <p class="debrief-score-caption">Final security rating</p>
+        <div class="home-rule"></div>
+        <h3 class="debrief-sub debrief-sub--inline">MISSION DEBRIEF</h3>
+        <dl class="debrief-stats">
+          <dt>PACKETS PROCESSED:</dt><dd>${state.packetsProcessed} / ${totalPkt}</dd>
+          <dt>CORRECT DECISIONS:</dt><dd>${state.correctDecisions}</dd>
+          <dt>WRONG DECISIONS:</dt><dd>${state.wrongDecisions}</dd>
+          <dt>THREATS NEUTRALIZED:</dt><dd>${correctBlocks}</dd>
+          <dt class="debrief-stat-warn">BREACHES ALLOWED:</dt><dd class="${wrongAllows > 0 ? 'text-breach' : ''}">${wrongAllows}</dd>
+          <dt class="debrief-stat-warn2">FALSE POSITIVES:</dt><dd class="${wrongBlocks > 0 ? 'text-fp' : ''}">${wrongBlocks}</dd>
+        </dl>
+        <div class="home-rule"></div>
+      </div>
 
-            <section class="debrief-section fade-slide-up" style="animation-delay:0.9s">
-              <p class="mono xp-line">XP AWARDED: <span data-xp-target="${xp}">0</span></p>
-            </section>
-          </div>
-
-          <button type="button" class="btn-primary debrief-again fade-slide-up" style="animation-delay:1.05s" data-again>
-            INTERROGATE AGAIN
-          </button>
+      <div class="debrief-block debrief-reveal" style="animation-delay:2200ms">
+        <h4 class="debrief-mini-title">THREAT TYPE BREAKDOWN</h4>
+        <div class="debrief-breakdown">
+          ${breakdownRow('HTTP UNENCRYPTED', httpCaught, httpTotal, 'http')}
+          ${breakdownRow('TYPOSQUATTING', typoCaught, typoTotal, 'typo')}
+          ${breakdownRow('PHISHING', phishCaught, phishTotal, 'phish')}
         </div>
-      </main>
-    `;
+      </div>
 
-    const flawEl = container.querySelector("[data-typewriter-flaw]");
-    if (flawEl && isWin) {
-      void typewriter(flawEl, fatalFlaw, () => {
-        const truth = container.querySelector("[data-truth]");
-        if (truth) {
-          setTimeout(() => truth.removeAttribute("hidden"), 1500);
-        }
-      });
-    }
-
-    const xpEl = container.querySelector("[data-xp-target]");
-    if (xpEl) {
-      const target = Number(xpEl.dataset.xpTarget) || 0;
-      animateCount(xpEl, target);
-    }
-
-    const again = container.querySelector("[data-again]");
-    again.addEventListener("click", async () => {
-      const sid = getState().sessionId;
-      try {
-        if (sid) await deleteSession(sid);
-      } catch {
-        /* ignore */
+      ${
+        missedMalicious.length
+          ? `<div class="debrief-block debrief-reveal" style="animation-delay:3300ms">
+        <h4 class="debrief-mini-title">UNDETECTED THREATS</h4>
+        <div class="debrief-missed">
+          ${missedMalicious
+            .map(
+              d => `
+            <div class="debrief-missed-row">
+              <span>${d.packet.id}</span>
+              <span>${d.packet.protocol}://${d.packet.domain}</span>
+              <span>[${String(d.packet.threatType).toUpperCase()}]</span>
+              <p class="debrief-missed-exp">${escapeHtml(d.packet.explanation)}</p>
+            </div>`
+            )
+            .join('')}
+        </div>
+      </div>`
+          : ''
       }
-      resetState();
-    });
-  })();
+
+      <div class="debrief-xp debrief-reveal" style="animation-delay:${missedMalicious.length ? 4400 : 3300}ms">
+        <span class="debrief-xp-label">XP AWARDED:</span>
+        <span class="debrief-xp-val" data-target="${xp}">0</span>
+      </div>
+
+      <div class="debrief-actions debrief-reveal" style="animation-delay:${missedMalicious.length ? 5500 : 4400}ms">
+        <button type="button" class="btn-debrief-primary" id="debrief-home">MISSION HOME</button>
+        <button type="button" class="btn-debrief-ghost" id="debrief-review-toggle">REVIEW PACKETS</button>
+      </div>
+
+      <div class="debrief-review debrief-reveal" id="debrief-review" hidden style="animation-delay:${missedMalicious.length ? 5500 : 4400}ms">
+        <table class="debrief-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Protocol</th><th>Domain</th><th>Correct action</th><th>Threat</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${packets
+              .map(
+                p => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.protocol}</td>
+                <td>${escapeHtml(p.domain)}</td>
+                <td>${p.isMalicious ? 'QUARANTINE' : 'ALLOW'}</td>
+                <td>${p.threatType}</td>
+              </tr>
+              <tr class="debrief-table-exp-row">
+                <td colspan="5">${escapeHtml(p.explanation)}</td>
+              </tr>`
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const xpEl = root.querySelector('.debrief-xp-val');
+  const target = xpEl ? Number(xpEl.getAttribute('data-target') ?? 0) : 0;
+  let cur = 0;
+  const dur = 900;
+  const t0 = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - t0) / dur);
+    cur = Math.round(target * p);
+    if (xpEl) xpEl.textContent = String(cur);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  root.querySelector('#debrief-home')?.addEventListener('click', () => {
+    resetState();
+  });
+
+  const reviewPanel = root.querySelector('#debrief-review');
+  root.querySelector('#debrief-review-toggle')?.addEventListener('click', () => {
+    reviewPanel?.toggleAttribute('hidden');
+  });
+
+  return () => {
+    root.innerHTML = '';
+  };
+}
+
+/**
+ * @param {string} label
+ * @param {number} x
+ * @param {number} y
+ * @param {'http'|'typo'|'phish'} tip
+ */
+function breakdownRow(label, x, y, tip) {
+  const tips = {
+    http: 'Remember: HTTP means data travels in plain text. Always look for the S.',
+    typo: "Enemies substitute letters for numbers. 'l' becomes '1', 'o' becomes '0'.",
+    phish: 'The domain can look perfect. Always check where the packet is actually going.',
+  };
+  const showTip = x < y;
+  return `
+    <div class="debrief-row">
+      <span class="debrief-row-label">${label}</span>
+      <span class="debrief-row-count">caught ${x} / ${y}</span>
+      ${showTip ? `<p class="debrief-row-tip">${tips[tip]}</p>` : ''}
+    </div>
+  `;
 }
 
 function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-async function typewriter(el, text, onDone) {
-  const full = String(text);
-  for (let i = 0; i <= full.length; i += 1) {
-    el.textContent = full.slice(0, i);
-    await new Promise((r) => setTimeout(r, 12));
-  }
-  if (onDone) onDone();
-}
-
-function animateCount(el, target) {
-  const start = performance.now();
-  const dur = 900;
-  const step = (now) => {
-    const p = Math.min(1, (now - start) / dur);
-    el.textContent = String(Math.round(target * p));
-    if (p < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
