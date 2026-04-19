@@ -1,4 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  CAMPAIGN_CONGRATS_KEY,
+  CAMPAIGN_PROGRESS_EVENT,
+  CAMPAIGN_STORAGE_KEY,
+  getCampaignPercent,
+  readCampaignProgress,
+} from './campaign-progress.js';
 import { getClientEnv } from './env.js';
 
 const env = getClientEnv();
@@ -128,8 +135,96 @@ function setOperativeEmail(user) {
   bar.append(line, br, em);
 }
 
+function renderCampaignProgressBar() {
+  const wrap = document.getElementById('dossier-campaign-progress');
+  if (!wrap) return;
+  const p = readCampaignProgress();
+  const pct = getCampaignPercent(p);
+  const steps = [
+    { id: 'm1', label: 'M1', done: p.m1Complete, hint: 'Deepfake — perfect run' },
+    { id: 'm2', label: 'M2', done: p.m2Complete, hint: 'Counter-Intel Firewall session' },
+    { id: 'm3', label: 'M3', done: p.m3Complete, hint: 'Cyber Defense — all modules' },
+  ];
+  const filled = steps.filter((s) => s.done).length;
+  wrap.innerHTML = '';
+
+  const pctRow = document.createElement('div');
+  pctRow.className = 'campaign-progress-pct-row';
+  const pctLabel = document.createElement('div');
+  pctLabel.className = 'campaign-progress-pct-head';
+  pctLabel.innerHTML =
+    '<span class="campaign-progress-pct-title">Training progress</span>' +
+    `<span class="campaign-progress-pct-value" aria-live="polite">${pct}%</span>`;
+  const pctTrack = document.createElement('div');
+  pctTrack.className = 'campaign-progress-pct-track';
+  pctTrack.setAttribute('role', 'progressbar');
+  pctTrack.setAttribute('aria-valuemin', '0');
+  pctTrack.setAttribute('aria-valuemax', '100');
+  pctTrack.setAttribute('aria-valuenow', String(pct));
+  pctTrack.setAttribute('aria-label', `Training progress ${pct} percent`);
+  const pctFill = document.createElement('div');
+  pctFill.className = 'campaign-progress-pct-fill';
+  pctFill.style.width = pct + '%';
+  pctTrack.appendChild(pctFill);
+  pctRow.appendChild(pctLabel);
+  pctRow.appendChild(pctTrack);
+  wrap.appendChild(pctRow);
+
+  const track = document.createElement('div');
+  track.className = 'campaign-progress-track';
+  track.setAttribute('role', 'group');
+  track.setAttribute('aria-label', 'Campaign milestones');
+  steps.forEach((s, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'campaign-progress-seg' + (s.done ? ' is-done' : '');
+    seg.dataset.mission = s.id;
+    seg.title = s.hint;
+    const lab = document.createElement('span');
+    lab.className = 'campaign-progress-seg-label';
+    lab.textContent = s.label;
+    seg.appendChild(lab);
+    track.appendChild(seg);
+    if (i < steps.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'campaign-progress-conn' + (s.done ? ' is-done' : '');
+      track.appendChild(conn);
+    }
+  });
+  wrap.appendChild(track);
+
+  const cap = document.createElement('p');
+  cap.className = 'campaign-progress-caption';
+  if (pct >= 100) {
+    cap.textContent =
+      'Campaign complete — all training milestones cleared. You are cleared for live deployment rotations.';
+  } else if (filled === 0) {
+    cap.textContent =
+      'Earn progress by completing Mission 01 (perfect score), Mission 02 (firewall session), and Mission 03 (all Cyber Defense modules).';
+  } else {
+    cap.textContent = `Milestones cleared: ${filled} of 3 (${pct}% overall).`;
+  }
+  wrap.appendChild(cap);
+
+  if (pct >= 100) {
+    const banner = document.createElement('div');
+    banner.className = 'campaign-complete-banner';
+    banner.setAttribute('role', 'status');
+    banner.innerHTML =
+      '<p class="campaign-complete-banner-title">Campaign complete</p>' +
+      '<p class="campaign-complete-banner-sub">Congratulations, operative. All training tracks are finished.</p>';
+    wrap.appendChild(banner);
+    if (!localStorage.getItem(CAMPAIGN_CONGRATS_KEY)) {
+      localStorage.setItem(CAMPAIGN_CONGRATS_KEY, '1');
+      toast('Congratulations — 100% training progress complete. Outstanding work, operative.', 9000);
+    }
+  }
+
+  wrap.setAttribute('data-progress-pct', String(pct));
+}
+
 function showMissionBriefing() {
   openScreen('select');
+  renderCampaignProgressBar();
   if (supabase) {
     supabase.auth.getUser().then(({ data: { user } }) => setOperativeEmail(user));
   }
@@ -261,6 +356,10 @@ document.querySelectorAll('.js-back-to-select').forEach((btn) => {
 });
 
 window.addEventListener('hashchange', routeFromHash);
+window.addEventListener(CAMPAIGN_PROGRESS_EVENT, renderCampaignProgressBar);
+window.addEventListener('storage', (e) => {
+  if (e.key === CAMPAIGN_STORAGE_KEY) renderCampaignProgressBar();
+});
 
 consumeHashOAuthError();
 
@@ -282,3 +381,5 @@ if (supabase) {
     routeFromHash();
   });
 }
+
+renderCampaignProgressBar();

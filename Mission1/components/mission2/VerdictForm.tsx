@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { appPath } from "@/lib/app-base-path";
 import { useMission2Store } from "@/lib/mission2/store";
 import type { DebriefClientPayload, VerdictPayload } from "@/lib/mission2/types";
 
@@ -43,7 +44,7 @@ export function VerdictForm({ open }: Props) {
         recommended_action: action,
       };
       const autoCaught = contradictionsLogged.filter((c) => c.autoDetected).length;
-      const resp = await fetch("/api/mission2/evaluate-verdict", {
+      const resp = await fetch(appPath("/api/mission2/evaluate-verdict"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -116,7 +117,7 @@ export function VerdictForm({ open }: Props) {
             >
               <option value="Detain">Detain</option>
               <option value="Release">Release</option>
-              <option value="Further Interrogation">Further Interrogation</option>
+              <option value="Further Interrogation">Further Security Review</option>
             </select>
           </label>
         </div>

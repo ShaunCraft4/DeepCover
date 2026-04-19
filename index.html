@@ -820,6 +820,115 @@
   }
   .dossier-link-btn:hover{color:#fff}
 
+  #dossier-campaign-progress{
+    margin-bottom:2rem;
+    padding:1.25rem 1.5rem;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,.35);
+  }
+  .campaign-progress-track{
+    display:flex;
+    align-items:center;
+    gap:0;
+    max-width:520px;
+  }
+  .campaign-progress-seg{
+    flex:1;
+    min-width:0;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--border2);
+    background:rgba(0,0,0,.4);
+    font-family:var(--mono);
+    font-size:.65rem;
+    letter-spacing:.12em;
+    color:var(--text-muted);
+    transition:background .3s,border-color .3s,color .3s;
+  }
+  .campaign-progress-seg.is-done{
+    border-color:rgba(0,255,157,.45);
+    background:rgba(0,255,157,.12);
+    color:var(--accent);
+    box-shadow:0 0 20px rgba(0,255,157,.12);
+  }
+  .campaign-progress-conn{
+    width:12px;
+    height:3px;
+    background:var(--border2);
+    flex-shrink:0;
+    transition:background .3s;
+  }
+  .campaign-progress-conn.is-done{background:rgba(0,255,157,.5)}
+  .campaign-progress-caption{
+    margin:.85rem 0 0;
+    font-size:.72rem;
+    color:var(--text-secondary);
+    line-height:1.5;
+    max-width:520px;
+  }
+  .campaign-progress-pct-row{
+    margin-bottom:1.1rem;
+    max-width:520px;
+  }
+  .campaign-progress-pct-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:.45rem;
+  }
+  .campaign-progress-pct-title{
+    font-family:var(--mono);
+    font-size:.58rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+  }
+  .campaign-progress-pct-value{
+    font-family:var(--mono);
+    font-size:.85rem;
+    font-weight:700;
+    color:var(--accent);
+    text-shadow:0 0 20px rgba(0,255,157,.25);
+  }
+  .campaign-progress-pct-track{
+    height:8px;
+    border-radius:4px;
+    background:rgba(0,0,0,.5);
+    border:1px solid var(--border2);
+    overflow:hidden;
+  }
+  .campaign-progress-pct-fill{
+    height:100%;
+    border-radius:3px;
+    background:linear-gradient(90deg,rgba(0,255,157,.25),var(--accent));
+    box-shadow:0 0 12px rgba(0,255,157,.35);
+    transition:width .45s ease;
+  }
+  .campaign-complete-banner{
+    margin-top:1rem;
+    padding:1rem 1.1rem;
+    border:1px solid rgba(0,255,157,.35);
+    background:rgba(0,255,157,.08);
+    border-radius:6px;
+    max-width:520px;
+  }
+  .campaign-complete-banner-title{
+    font-family:var(--display);
+    font-size:1rem;
+    font-weight:800;
+    color:var(--accent);
+    margin:0 0 .35rem;
+    letter-spacing:-.02em;
+  }
+  .campaign-complete-banner-sub{
+    margin:0;
+    font-size:.78rem;
+    color:var(--text-secondary);
+    line-height:1.5;
+  }
+
   .mission-select-grid{
     display:grid;
     grid-template-columns:1fr;
@@ -1008,7 +1117,7 @@
       <span class="accent">Defend</span><br>the Future.
     </h1>
     <p class="hero-subheadline">
-      Master deception detection, interrogation psychology, and cyber defense through immersive AI-powered missions.
+      Master deception detection, safe-site practices, and cyber defense through immersive AI-powered missions.
     </p>
     <div class="hero-buttons">
       <button type="button" class="btn-primary js-begin-training">Begin Training</button>
@@ -1180,12 +1289,12 @@
       <div class="mission-arrow">↗</div>
       <div class="mission-number">// MISSION 02</div>
       <div class="mission-icon-bg">◉</div>
-      <h3 class="mission-title">Interrogation Training</h3>
-      <p class="mission-desc">Conduct high-stakes interrogations against AI suspects trained on behavioral psychology. Detect contradiction, exploit cognitive bias, and extract truth without a single misstep.</p>
+      <h3 class="mission-title">Counter-Intel Firewall</h3>
+      <p class="mission-desc">Safe-site training that teaches you how to identify trusted domains, catch lookalikes, and block malicious traffic before it causes damage.</p>
       <div class="mission-tags">
-        <span class="tag">Psychology</span>
-        <span class="tag">Behavioral AI</span>
-        <span class="tag">Logic Traps</span>
+        <span class="tag">Safe Browsing</span>
+        <span class="tag">Domain Verification</span>
+        <span class="tag">Threat Filtering</span>
       </div>
     </div>
 
@@ -1269,6 +1378,7 @@
         <p class="dossier-kicker">// Post-authentication briefing</p>
         <h2 class="dossier-screen-title">Select your first directive</h2>
         <p class="dossier-screen-sub">Choose a mission track. Progress is tied to your signed-in identity so we can resume your training across sessions.</p>
+        <div id="dossier-campaign-progress" class="dossier-campaign-progress" aria-live="polite"></div>
       </div>
       <div class="dossier-userbar">
         <span id="dossier-user-email"></span>
@@ -1284,20 +1394,20 @@
         <span class="mission-select-hint">Synthetic media forensics and coordinated disinformation response.</span>
         <span class="mission-select-go">Enter module →</span>
       </a>
-      <button type="button" class="mission-select-btn" data-mission="interrogation" data-mission-route="interrogation">
+      <a class="mission-select-btn" data-mission="interrogation" data-mission-external="true" href="/Mission2/index.html" aria-label="Mission 02 — Counter-Intel Firewall (standalone module)">
         <span class="mission-select-num">// MISSION 02</span>
         <span class="mission-select-icon" aria-hidden="true">◉</span>
-        <span class="mission-select-name">Interrogation Training</span>
-        <span class="mission-select-hint">Behavioral psychology against AI-generated suspects.</span>
+        <span class="mission-select-name">Counter-Intel Firewall</span>
+        <span class="mission-select-hint">Safe-site training focused on spotting malicious links, lookalike domains, and insecure traffic patterns.</span>
         <span class="mission-select-go">Enter module →</span>
-      </button>
-      <button type="button" class="mission-select-btn" data-mission="cyber" data-mission-route="cyber">
+      </a>
+      <a class="mission-select-btn" data-mission="cyber" data-mission-external="true" href="/Mission3/index.html" aria-label="Mission 03 — Cyber Defense (standalone module)">
         <span class="mission-select-num">// MISSION 03</span>
         <span class="mission-select-icon" aria-hidden="true">◈</span>
         <span class="mission-select-name">Cyber Defense</span>
         <span class="mission-select-hint">Intrusion response, breach neutralization, live infrastructure defense.</span>
         <span class="mission-select-go">Enter module →</span>
-      </button>
+      </a>
     </div>
   </div>
 </section>
@@ -1325,13 +1435,13 @@
     <header class="dossier-screen-header">
       <div>
         <p class="dossier-kicker">// Mission 02 — Active</p>
-        <h2 class="dossier-screen-title">Interrogation Training</h2>
-        <p class="dossier-screen-sub">High-stakes dialogue against behavioral AI suspects. Wire ElevenLabs voice and Gemini dialogue here.</p>
+        <h2 class="dossier-screen-title">Safe Site Training</h2>
+        <p class="dossier-screen-sub"> Practical training on how to spot which sites are safe and which are not.</p>
       </div>
     </header>
-    <div class="mission-stage-badge">STATUS — INTERROGATION ROOM</div>
-    <h3 class="mission-stage-headline">The subject is waiting.</h3>
-    <p class="mission-stage-body">Contradiction mapping and cognitive pressure scenarios will attach to this screen. Your started timestamp syncs to Supabase when progress storage is enabled.</p>
+    <div class="mission-stage-badge">STATUS — FIREWALL CONSOLE READY</div>
+    <h3 class="mission-stage-headline">Traffic inspection protocols online.</h3>
+    <p class="mission-stage-body">Safe-site drills run in this module: verify destinations, detect deceptive domains, and quarantine suspicious traffic before compromise.</p>
     <div class="dossier-back-row">
       <button type="button" class="dossier-btn-ghost js-back-to-select">← Mission briefing</button>
     </div>
@@ -1344,7 +1454,7 @@
       <div>
         <p class="dossier-kicker">// Mission 03 — Active</p>
         <h2 class="dossier-screen-title">Cyber Defense</h2>
-        <p class="dossier-screen-sub">Respond to AI-augmented intrusions against classified infrastructure. Simulation hooks go on this layer.</p>
+        <p class="dossier-screen-sub">Security awareness training on how to protect yourself from cyber attacks.</p>
       </div>
     </header>
     <div class="mission-stage-badge">STATUS — NETWORK UNDER ATTACK</div>

@@ -720,6 +720,23 @@ function showHub() { updateHub(); showPhase('hub'); document.getElementById('osi
 
 const MODULE_ORDER = ['phishing','social','twofactor','osint'];
 let SCORES = { phishing:null, social:null, twofactor:null, osint:null };
+let campaignM3Synced = false;
+
+function syncDeepCoverMission3Complete() {
+  if (campaignM3Synced) return;
+  try {
+    var KEY = 'deepcover_campaign_v1';
+    var EVT = 'deepcover-campaign-progress';
+    var raw = localStorage.getItem(KEY);
+    var p = raw ? JSON.parse(raw) : {};
+    p.m3Complete = true;
+    p.m3Reached = true;
+    p.updatedAt = new Date().toISOString();
+    localStorage.setItem(KEY, JSON.stringify(p));
+    window.dispatchEvent(new CustomEvent(EVT));
+    campaignM3Synced = true;
+  } catch (e) {}
+}
 
 function startModule(name) {
   if (name !== 'osint') { document.getElementById('osint-counter').className='osint-counter'; document.getElementById('osint-results-overlay').className='osint-results-overlay'; }
@@ -743,6 +760,7 @@ function updateHub() {
     }
   });
   document.getElementById('hub-progress').textContent = done + ' / 4 complete';
+  if (done >= 4) syncDeepCoverMission3Complete();
 }
 
 function completeModule(name, score, lesson) {

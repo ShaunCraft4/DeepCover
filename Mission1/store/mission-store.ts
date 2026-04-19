@@ -295,9 +295,17 @@ export const useMissionStore = create<MissionState>((set, get) => ({
 
       if (!resp.ok) {
         const t = await resp.text();
+        let aiError = t;
+        try {
+          const j = JSON.parse(t) as { error?: string; hint?: string; detail?: string };
+          aiError = [j.error, j.hint].filter(Boolean).join(" — ");
+          if (!aiError.trim() && j.detail) aiError = j.detail.slice(0, 400);
+        } catch {
+          aiError = t.slice(0, 600);
+        }
         set((s) => ({
           submitting: false,
-          debrief: s.debrief ? { ...s.debrief, ai: null, aiError: t } : s.debrief,
+          debrief: s.debrief ? { ...s.debrief, ai: null, aiError } : s.debrief,
         }));
         return;
       }

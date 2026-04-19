@@ -2,6 +2,13 @@ import type { Artifact, PlayerTag } from "@/data/types";
 
 const TAG_POINTS = { correct: 20, uncertain: 8, wrong: 0 } as const;
 
+/** Max points for threat assessment text (separate from per-artifact tags). */
+export const ASSESSMENT_MAX_POINTS = 20;
+/** At or above this length → full assessment points. */
+export const ASSESSMENT_FULL_CREDIT_CHARS = 100;
+/** At or above this length (but below full) → partial credit. */
+export const ASSESSMENT_PARTIAL_CREDIT_CHARS = 45;
+
 export function scoreTag(player: PlayerTag | null, truth: boolean): number {
   if (!player) return 0;
   const actuallySynthetic = truth;
@@ -19,20 +26,23 @@ export function isTagCorrect(player: PlayerTag | null, isSynthetic: boolean) {
 
 export function scoreAssessment(text: string): { points: number; note: string } {
   const trimmed = text.trim();
-  if (trimmed.length >= 140) {
+  if (trimmed.length >= ASSESSMENT_FULL_CREDIT_CHARS) {
     return {
-      points: 20,
-      note: "Assessment meets depth threshold (placeholder rule).",
+      points: ASSESSMENT_MAX_POINTS,
+      note: `Full assessment credit (${ASSESSMENT_FULL_CREDIT_CHARS}+ characters).`,
     };
   }
-  if (trimmed.length >= 60) {
+  if (trimmed.length >= ASSESSMENT_PARTIAL_CREDIT_CHARS) {
     return {
       points: 12,
-      note: "Assessment is directionally complete (placeholder rule).",
+      note: `Partial credit — expand to ${ASSESSMENT_FULL_CREDIT_CHARS}+ characters for full ${ASSESSMENT_MAX_POINTS} pts (tags are separate).`,
     };
   }
   if (trimmed.length > 0) {
-    return { points: 4, note: "Minimal assessment captured (placeholder rule)." };
+    return {
+      points: 4,
+      note: `Minimal credit — aim for at least ${ASSESSMENT_PARTIAL_CREDIT_CHARS} characters (or ${ASSESSMENT_FULL_CREDIT_CHARS}+ for full credit).`,
+    };
   }
   return { points: 0, note: "No assessment text submitted." };
 }
@@ -51,6 +61,6 @@ export function computeMissionScore(args: {
   const tagTotal = perArtifact.reduce((s, x) => s + x.points, 0);
   const assess = scoreAssessment(args.assessment);
   const total = tagTotal + assess.points;
-  const max = args.artifacts.length * TAG_POINTS.correct + 20;
+  const max = args.artifacts.length * TAG_POINTS.correct + ASSESSMENT_MAX_POINTS;
   return { perArtifact, tagTotal, assess, total, max };
 }

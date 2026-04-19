@@ -11,7 +11,10 @@ import type { AiDebrief, DebriefResult } from "@/store/mission-store";
 type DebriefRevealProps = {
   open: boolean;
   result: DebriefResult | null;
+  /** Dismiss debrief and start a new Mission 1 run. */
   onClose: () => void;
+  /** When score is perfect, advance to Mission 2 (campaign progress is saved by the parent). */
+  onContinueToMission2?: () => void;
 };
 
 function gradeLabel(score: number, max: number) {
@@ -22,11 +25,18 @@ function gradeLabel(score: number, max: number) {
   return "NEEDS REMEDIATION";
 }
 
-export function DebriefReveal({ open, result, onClose }: DebriefRevealProps) {
+export function DebriefReveal({
+  open,
+  result,
+  onClose,
+  onContinueToMission2,
+}: DebriefRevealProps) {
   const confidence = useMemo(() => {
     if (!result) return "";
     return gradeLabel(result.total, result.max);
   }, [result]);
+
+  const perfect = Boolean(result && result.max > 0 && result.total >= result.max);
 
   const ai = (result?.ai ?? null) as AiDebrief | null;
   const aiError = result?.aiError ?? null;
@@ -192,10 +202,15 @@ export function DebriefReveal({ open, result, onClose }: DebriefRevealProps) {
 
                     <div className="rounded-xl border border-dossier-border bg-dossier-bg/35 p-5">
                       <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-dossier-muted">
-                        Assessment scoring (stub)
+                        Threat assessment (written)
+                      </p>
+                      <p className="mt-2 text-xs leading-relaxed text-dossier-muted">
+                        Tags score proof on each artifact; this box scores depth of your written
+                        answer (up to +20). They are independent — perfect tags can still leave
+                        points on the table here.
                       </p>
                       <p className="mt-3 text-sm text-dossier-text">
-                        +{result.assess.points} pts — {result.assess.note}
+                        +{result.assess.points} / 20 pts — {result.assess.note}
                       </p>
                     </div>
 
@@ -241,7 +256,7 @@ export function DebriefReveal({ open, result, onClose }: DebriefRevealProps) {
                         </div>
                       ) : aiError ? (
                         <p className="mt-3 text-xs leading-relaxed text-dossier-muted">
-                          AI debrief unavailable: {aiError}
+                          AI debrief unavailable. {aiError}
                         </p>
                       ) : (
                         <p className="mt-3 text-xs leading-relaxed text-dossier-muted">
@@ -262,18 +277,40 @@ export function DebriefReveal({ open, result, onClose }: DebriefRevealProps) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-4 border-t border-dossier-border bg-dossier-bg/35 px-8 py-5">
+              <div className="flex flex-col gap-3 border-t border-dossier-border bg-dossier-bg/35 px-8 py-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="font-mono text-[11px] text-dossier-muted">
                   SESSION LOGGED · TRAINING NODE
                 </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="border-dossier-accent/30"
-                >
-                  Next briefing
-                </Button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {perfect && onContinueToMission2 ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onClose}
+                        className="border-dossier-border"
+                      >
+                        Run again
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={onContinueToMission2}
+                        className="bg-dossier-accent text-dossier-bg hover:bg-dossier-accent/90"
+                      >
+                        Continue to Mission 2
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onClose}
+                      className="border-dossier-accent/30"
+                    >
+                      Next briefing
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

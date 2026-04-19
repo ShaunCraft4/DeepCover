@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { appPath } from "@/lib/app-base-path";
 import { useMission2Store } from "@/lib/mission2/store";
 
 export default function Mission2BriefingPage() {
@@ -21,15 +22,25 @@ export default function Mission2BriefingPage() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch("/api/mission2/generate-suspect", { method: "POST" });
+      const resp = await fetch(appPath("/api/mission2/generate-suspect"), {
+        method: "POST",
+      });
       if (!resp.ok) {
-        throw new Error("Unable to generate suspect");
+        const detail = await resp.text().catch(() => "");
+        throw new Error(detail || `HTTP ${resp.status}`);
       }
       const data = (await resp.json()) as { suspect: unknown };
       setSuspect(data.suspect as never);
       router.push("/mission2/interrogation");
-    } catch {
-      setError("Could not start the mission. Check GEMINI_API_KEY in .env and try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const looksLikeKey =
+        /GEMINI|API key|501|502|503/i.test(msg) || /Missing Gemini/i.test(msg);
+      setError(
+        looksLikeKey
+          ? "Could not start the mission. Check VITE_GEMINI_API_KEY or GEMINI_API_KEY in the repo-root .env and restart `npm run dev`."
+          : `Could not start the mission. ${msg.slice(0, 280)}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -84,10 +95,10 @@ export default function Mission2BriefingPage() {
               onClick={() => void start()}
               className="rounded-md border border-[rgba(0,255,157,0.35)] bg-[rgba(0,255,157,0.1)] px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--accent)] transition hover:bg-[rgba(0,255,157,0.16)] disabled:opacity-50"
             >
-              {loading ? "Starting…" : "Start interrogation"}
+              {loading ? "Starting…" : "Start firewall training"}
             </button>
             <Link
-              href="/mission2"
+              href="/Mission2/index.html"
               className="text-center font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
             >
               Back

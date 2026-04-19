@@ -1,4 +1,5 @@
 import { getState, resetState } from '../lib/store.js';
+import { markMission2FirewallComplete } from '../lib/campaignBridge.js';
 
 /**
  * @param {'http_unencrypted' | 'typosquatting' | 'phishing'} t
@@ -22,6 +23,7 @@ function caughtCount(decisions, t) {
  * @param {HTMLElement} root
  */
 export function mountDebrief(root) {
+  markMission2FirewallComplete();
   const state = getState();
   const packets = state.packets;
   const decisions = state.decisions;
@@ -123,6 +125,7 @@ export function mountDebrief(root) {
 
       <div class="debrief-actions debrief-reveal" style="animation-delay:${missedMalicious.length ? 5500 : 4400}ms">
         <button type="button" class="btn-debrief-primary" id="debrief-home">MISSION HOME</button>
+        <a class="btn-debrief-ghost" href="/Mission3/index.html">MISSION 03 — CYBER DEFENSE</a>
         <button type="button" class="btn-debrief-ghost" id="debrief-review-toggle">REVIEW PACKETS</button>
       </div>
 

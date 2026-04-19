@@ -45,6 +45,9 @@ export function mountHome(root) {
             <li><strong>TLD · egress · tone · scripts</strong> — Wrong domain endings, odd IPs, fake-calm “compliance” tone, and homoglyphs.</li>
           </ol>
           <p>One wrong approval and enemy signals intelligence owns that data. Don't let it happen.</p>
+          <p class="home-next-module">
+            <a class="home-next-module-link" href="/Mission3/index.html">Mission 03 — Cyber Defense →</a>
+          </p>
         </div>
         <div class="home-rule"></div>
       </section>

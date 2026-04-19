@@ -1274,6 +1274,32 @@ body {
   color: var(--accent);
 }
 
+a.btn-debrief-ghost {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-next-module {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.home-next-module-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.home-next-module-link:hover {
+  text-decoration: underline;
+}
+
 .debrief-review {
   border: 1px solid var(--border);
   background: var(--panel);

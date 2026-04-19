@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { DebriefReveal } from "@/components/mission2/DebriefReveal";
+import { markMission2Complete } from "@/lib/campaign-progress";
 import { useMission2Store } from "@/lib/mission2/store";
 
 export default function Mission2DebriefPage() {
@@ -35,8 +36,9 @@ export default function Mission2DebriefPage() {
       <DebriefReveal
         payload={payload}
         onExit={() => {
+          markMission2Complete();
           resetMission();
-          router.push("/mission2");
+          router.push("/mission3");
         }}
       />
     </div>

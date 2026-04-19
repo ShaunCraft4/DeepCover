@@ -10,35 +10,43 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * 404 — rewrite those to the Next app.
  */
 const mission1DevProxy = {
-  "/mission1": {
-    target: "http://127.0.0.1:3000",
+  '/mission1': {
+    target: 'http://127.0.0.1:3000',
     changeOrigin: true,
+    /** Next.js dev HMR / WebSocket — use only http://localhost:5173 for Mission1 in the browser. */
+    ws: true,
   },
-  "/_next": {
-    target: "http://127.0.0.1:3000",
+  '/_next': {
+    target: 'http://127.0.0.1:3000',
     changeOrigin: true,
-    rewrite: (path) => "/mission1" + path,
+    rewrite: (path) => '/mission1' + path,
   },
 };
 
+/** Mission2 / Mission3 — extra HTML entries on :5173 (multi-page app). */
+const devProxy = { ...mission1DevProxy };
+
 export default defineConfig({
   root: '.',
-  // Mission 02 keeps its env vars in Mission2/.env
-  envDir: 'Mission2',
-  envPrefix: ['VITE_'],
+  /** Repo-root `.env` — same file `src/env.js` documents. */
+  envDir: '.',
+  /** Dossier: `VITE_`. Mission2 `lib/geminiEnv.js` also reads `GEMINI_*` / `GOOGLE_*` (static names). */
+  envPrefix: ['VITE_', 'GEMINI_', 'GOOGLE_', 'PUBLIC_'],
   server: {
     port: 5173,
-    proxy: mission1DevProxy,
+    strictPort: true,
+    proxy: devProxy,
   },
   preview: {
     port: 4173,
-    proxy: mission1DevProxy,
+    proxy: devProxy,
   },
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
         mission2: resolve(__dirname, 'Mission2/index.html'),
+        mission3: resolve(__dirname, 'Mission3/index.html'),
       },
     },
   },

@@ -1,3 +1,5 @@
+import { readGeminiKey, readGeminiModel } from '../lib/geminiEnv.js';
+
 /**
  * @typedef {Object} Packet
  * @property {string} id
@@ -17,14 +19,18 @@
  */
 export async function generatePackets(clearanceLevel) {
   const prompt = buildPacketPrompt(clearanceLevel);
-  const key = import.meta.env.VITE_GEMINI_API_KEY;
+  const key = readGeminiKey();
+  const model = readGeminiModel();
   if (!key) {
+    console.warn(
+      '[Mission2] No Gemini key in env. Set VITE_GEMINI_API_KEY (or GEMINI_API_KEY) in repo-root .env — see Mission2/vite.config.mjs envDir.',
+    );
     const { FALLBACK_PACKETS } = await import('../lib/fallbackPackets.js');
     return FALLBACK_PACKETS;
   }
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${key}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

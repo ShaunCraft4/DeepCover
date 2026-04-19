@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 
+import { appPath } from "@/lib/app-base-path";
 import { createTurn, useMission2Store } from "@/lib/mission2/store";
 import type { PublicSuspectProfile } from "@/lib/mission2/types";
 
@@ -194,7 +195,7 @@ export function InterrogationChat({ suspect, onVerdictNeeded }: Props) {
     let accumulated = "";
 
     try {
-      const resp = await fetch("/api/mission2/interrogate", {
+      const resp = await fetch(appPath("/api/mission2/interrogate"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -247,7 +248,7 @@ export function InterrogationChat({ suspect, onVerdictNeeded }: Props) {
     <div className="relative flex min-h-[420px] flex-col rounded-xl border border-[var(--border)] bg-[var(--panel)] shadow-glow">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[var(--text-secondary)]">
-          Interrogation
+          Counter-Intel Firewall
         </p>
         <p
           className={`font-mono text-[10px] uppercase tracking-[0.2em] ${

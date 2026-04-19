@@ -11,9 +11,19 @@ type MissionBriefingProps = {
   /** Gemini is generating session objective + assessment question. */
   loading?: boolean;
   onStart: () => void;
+  /**
+   * Optional absolute path on the same origin (e.g. `/Mission3/index.html`) to open the standalone
+   * Cyber Defense module without leaving the training flow context.
+   */
+  mission3Href?: string;
 };
 
-export function MissionBriefing({ brief, loading = false, onStart }: MissionBriefingProps) {
+export function MissionBriefing({
+  brief,
+  loading = false,
+  onStart,
+  mission3Href,
+}: MissionBriefingProps) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-md"
@@ -88,18 +98,30 @@ export function MissionBriefing({ brief, loading = false, onStart }: MissionBrie
           </p>
         </div>
 
-        <div className="relative flex items-center justify-between gap-4 border-t border-dossier-border bg-dossier-bg/30 px-8 py-5">
-          <p className="font-mono text-[11px] text-dossier-muted">
-            CHANNEL: SECURE / TRAINING NODE
-          </p>
-          <Button
-            type="button"
-            onClick={onStart}
-            disabled={loading}
-            className="min-w-[160px] font-semibold"
-          >
-            {loading ? "Preparing…" : "Enter operations deck"}
-          </Button>
+        <div className="relative space-y-3 border-t border-dossier-border bg-dossier-bg/30 px-8 py-5">
+          {mission3Href ? (
+            <p className="text-center">
+              <a
+                href={mission3Href}
+                className="font-mono text-[10px] uppercase tracking-[0.2em] text-dossier-muted underline-offset-4 transition hover:text-dossier-accent hover:underline"
+              >
+                Mission 03 — Cyber Defense (open standalone module)
+              </a>
+            </p>
+          ) : null}
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-mono text-[11px] text-dossier-muted">
+              CHANNEL: SECURE / TRAINING NODE
+            </p>
+            <Button
+              type="button"
+              onClick={onStart}
+              disabled={loading}
+              className="min-w-[160px] font-semibold"
+            >
+              {loading ? "Preparing…" : "Enter operations deck"}
+            </Button>
+          </div>
         </div>
       </motion.div>
     </motion.div>

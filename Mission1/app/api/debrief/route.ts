@@ -101,7 +101,26 @@ export async function POST(req: Request) {
         maxOutputTokens: 900,
       },
     };
-    const { data } = await geminiGenerateContentFirstOk(apiKey, GEMINI_TEXT_MODELS, requestBody);
+    let data: unknown;
+    try {
+      const r = await geminiGenerateContentFirstOk(apiKey, GEMINI_TEXT_MODELS, requestBody);
+      data = r.data;
+    } catch (geminiErr: unknown) {
+      const raw = String(geminiErr instanceof Error ? geminiErr.message : geminiErr);
+      const invalidKey =
+        /API_KEY_INVALID|API key not valid/i.test(raw) ||
+        raw.toLowerCase().includes("invalid api key");
+      return NextResponse.json(
+        {
+          error: "Gemini request failed.",
+          detail: raw.slice(0, 800),
+          hint: invalidKey
+            ? "Your key was rejected by Google. Create a new key at https://aistudio.google.com/apikey , enable the Generative Language API for the project, and set GEMINI_API_KEY or VITE_GEMINI_API_KEY in the repo-root .env (restart npm run dev). If the key was exposed publicly, rotate it in Google Cloud."
+            : "Check GEMINI_API_KEY / VITE_GEMINI_API_KEY in repo-root .env and restart the dev server.",
+        },
+        { status: 502 },
+      );
+    }
     const typed = data as {
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
     };
@@ -117,9 +136,13 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(json, { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
-      { error: "Gemini request crashed.", detail: String(e?.message ?? e) },
+      {
+        error: "Unexpected debrief error.",
+        detail: String(e instanceof Error ? e.message : e),
+        hint: "Try again; if it persists, check server logs and Gemini API status.",
+      },
       { status: 500 },
     );
   }

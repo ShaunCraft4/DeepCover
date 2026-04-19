@@ -129,7 +129,7 @@ export function DebriefReveal({ payload, onExit }: Props) {
               onClick={onExit}
               className="rounded-md border border-[rgba(0,255,157,0.35)] bg-[rgba(0,255,157,0.08)] px-5 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--accent)] transition hover:bg-[rgba(0,255,157,0.12)]"
             >
-              Done
+              Continue to Mission 3
             </button>
           </div>
         </div>

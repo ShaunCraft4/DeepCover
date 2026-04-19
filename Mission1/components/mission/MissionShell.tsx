@@ -2,8 +2,8 @@
 
 import { useLayoutEffect, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-
 import { MISSION_BRIEF } from "@/data/mission1-mock";
+import { markMission1Perfect } from "@/lib/campaign-progress";
 import { taggedCount, useMissionStore } from "@/store/mission-store";
 
 import { ConsoleHeader } from "./ConsoleHeader";
@@ -78,6 +78,15 @@ export function MissionShell() {
     [sessionObjective],
   );
 
+  const continueToMission2 = () => {
+    const d = useMissionStore.getState().debrief;
+    if (!d || d.max <= 0 || d.total < d.max) return;
+    markMission1Perfect(d.total, d.max);
+    useMissionStore.setState({ phase: "briefing", debrief: null, submitting: false });
+    /** Standalone Mission2 Vite app at `/Mission2/index.html`, not Next `/mission1/mission2`. */
+    window.location.assign(new URL("/Mission2/index.html", window.location.origin).href);
+  };
+
   return (
     <div className="relative min-h-screen">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,255,157,0.08),transparent_55%)]" />
@@ -96,11 +105,17 @@ export function MissionShell() {
             brief={briefingBrief}
             loading={promptsLoading}
             onStart={startMission}
+            mission3Href="/Mission3/index.html"
           />
         ) : null}
       </AnimatePresence>
 
-      <DebriefReveal open={phase === "debrief"} result={debrief} onClose={closeDebrief} />
+      <DebriefReveal
+        open={phase === "debrief"}
+        result={debrief}
+        onClose={closeDebrief}
+        onContinueToMission2={continueToMission2}
+      />
 
       {phase !== "briefing" ? (
         <main className="relative mx-auto max-w-[1600px] px-4 py-6 md:px-6">
