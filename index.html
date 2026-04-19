@@ -487,6 +487,11 @@
     cursor:pointer;
     transition:background .3s;
   }
+  a.mission-card{
+    display:block;
+    text-decoration:none;
+    color:inherit;
+  }
   .mission-card::after{
     content:'';
     position:absolute;
@@ -842,6 +847,10 @@
     transition:background .25s,border-color .25s,transform .2s;
     overflow:hidden;
   }
+  a.mission-select-btn{
+    text-decoration:none;
+    box-sizing:border-box;
+  }
   .mission-select-btn::before{
     content:'';
     position:absolute;top:0;left:0;right:0;height:2px;
@@ -1154,7 +1163,7 @@
   <p class="section-sub reveal" style="transition-delay:.15s">Each mission is an AI-constructed scenario drawn from real-world intelligence challenges. No two runs are identical.</p>
   <div class="missions-grid">
 
-    <div class="mission-card reveal">
+    <a class="mission-card reveal js-mission1-link" data-mission1-path="/" href="/mission1/" aria-label="Mission 01 — Deepfake Detection (opens the Mission 1 app)">
       <div class="mission-arrow">↗</div>
       <div class="mission-number">// MISSION 01</div>
       <div class="mission-icon-bg">⬡</div>
@@ -1165,7 +1174,7 @@
         <span class="tag">Media Forensics</span>
         <span class="tag">Adversarial AI</span>
       </div>
-    </div>
+    </a>
 
     <div class="mission-card reveal" style="transition-delay:.15s">
       <div class="mission-arrow">↗</div>
@@ -1268,13 +1277,13 @@
       </div>
     </header>
     <div class="mission-select-grid" role="group" aria-label="Mission tracks">
-      <button type="button" class="mission-select-btn" data-mission="deepfake" data-mission-route="deepfake">
+      <a class="mission-select-btn js-mission1-link" data-mission="deepfake" data-mission-external="true" data-mission1-path="/" href="/mission1/" aria-label="Mission 01 — open Deepfake Detection in the Mission 1 app">
         <span class="mission-select-num">// MISSION 01</span>
         <span class="mission-select-icon" aria-hidden="true">⬡</span>
         <span class="mission-select-name">Deepfake Detection</span>
         <span class="mission-select-hint">Synthetic media forensics and coordinated disinformation response.</span>
         <span class="mission-select-go">Enter module →</span>
-      </button>
+      </a>
       <button type="button" class="mission-select-btn" data-mission="interrogation" data-mission-route="interrogation">
         <span class="mission-select-num">// MISSION 02</span>
         <span class="mission-select-icon" aria-hidden="true">◉</span>

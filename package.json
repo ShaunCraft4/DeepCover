@@ -3,11 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n dossier,mission1 -c cyan,magenta \"vite\" \"npm --prefix Mission1 run dev\"",
+    "dev:dossier": "vite",
+    "dev:mission1": "npm --prefix Mission1 run dev",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "vite": "^6.3.5"
   },
   "dependencies": {
