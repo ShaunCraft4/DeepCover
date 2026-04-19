@@ -67,9 +67,24 @@ export function MissionBriefing({ brief, loading = false, onStart }: MissionBrie
               <p className="mt-2 text-dossier-text">{brief.objective}</p>
             )}
           </div>
+          <div className="rounded-lg border border-dossier-border/80 bg-dossier-panel/25 p-4">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-dossier-accent">
+              How this run works
+            </p>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-dossier-text/90">
+              <li>Open each artifact from the evidence list (left).</li>
+              <li>
+                For every item, choose <span className="font-mono text-[11px]">REAL</span>,{" "}
+                <span className="font-mono text-[11px]">SYNTHETIC</span>, or{" "}
+                <span className="font-mono text-[11px]">UNCERTAIN</span> on the right.
+              </li>
+              <li>Answer the threat-assessment prompt in the text box (required).</li>
+              <li>Submit once — your tags lock for scoring.</li>
+            </ol>
+          </div>
           <p className="text-xs text-dossier-muted">
-            Authentication is probabilistic. Document uncertainty when the evidence does not
-            justify a hard call.
+            When evidence is thin, UNCERTAIN is a valid call. Prefer honest uncertainty over a forced
+            guess.
           </p>
         </div>
 

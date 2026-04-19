@@ -105,7 +105,13 @@ function WaveformPlaceholder() {
   );
 }
 
-export function MediaViewer({ artifact }: { artifact: Artifact | null }) {
+type MediaViewerProps = {
+  artifact: Artifact | null;
+  /** Used to show operator hints only during the active run. */
+  phase?: "briefing" | "operations" | "debrief";
+};
+
+export function MediaViewer({ artifact, phase = "operations" }: MediaViewerProps) {
   const sessionVisual = useMissionStore(
     useShallow((s) => ({
       generatedImages: s.generatedImages,
@@ -221,9 +227,16 @@ export function MediaViewer({ artifact }: { artifact: Artifact | null }) {
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-dossier-border glass-panel">
       <div className="pointer-events-none absolute inset-0 opacity-25 scanlines" />
       <div className="relative border-b border-dossier-border px-6 py-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-dossier-muted">
-          Media viewer
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-dossier-muted">
+            Inspect selected artifact
+          </p>
+          {phase === "operations" ? (
+            <p className="max-w-md text-xs leading-relaxed text-dossier-muted sm:text-right">
+              Use hints below the media, then pick REAL / SYNTHETIC / UNCERTAIN on the right.
+            </p>
+          ) : null}
+        </div>
         <AnimatePresence mode="wait">
           {artifact ? (
             <motion.div
@@ -242,21 +255,25 @@ export function MediaViewer({ artifact }: { artifact: Artifact | null }) {
               </p>
             </motion.div>
           ) : (
-            <motion.p
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-3 text-sm text-dossier-muted"
+              className="mt-4 rounded-lg border border-dossier-border/80 bg-dossier-panel/30 px-4 py-3"
             >
-              Select an artifact from the board.
-            </motion.p>
+              <p className="text-sm font-medium text-dossier-text">Start on the left</p>
+              <p className="mt-1 text-sm leading-relaxed text-dossier-muted">
+                Click the first item in the evidence list to load it here. You will review each
+                one, assign a classification, then write the threat assessment before submitting.
+              </p>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {!artifact ? (
-        <div className="relative flex flex-1 items-center justify-center p-10 text-sm text-dossier-muted">
-          Awaiting selection…
+        <div className="relative flex flex-1 items-center justify-center p-8 text-sm text-dossier-muted">
+          Nothing loaded yet — choose an artifact from the list.
         </div>
       ) : (
         <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">

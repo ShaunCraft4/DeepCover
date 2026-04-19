@@ -33,7 +33,7 @@ export function MissionTimer() {
         Mission clock
       </p>
       <p className="mt-2 font-mono text-xl text-dossier-text">{label}</p>
-      <p className="mt-2 text-xs text-dossier-muted">Local elapsed time (training)</p>
+      <p className="mt-2 text-[11px] text-dossier-muted">Elapsed (not scored)</p>
     </div>
   );
 }

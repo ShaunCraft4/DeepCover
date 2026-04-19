@@ -18,6 +18,17 @@ const nextConfig = {
   reactStrictMode: true,
   /** Served under /mission1 in dev (Vite proxy) and when hosted behind the dossier origin. */
   basePath: "/mission1",
+  /** Hitting port 3000 at `/` would otherwise 404; send users to the app entry. */
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/mission1",
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

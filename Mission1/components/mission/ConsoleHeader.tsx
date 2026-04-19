@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 type ConsoleHeaderProps = {
   missionTitle: string;
   missionCode: string;
@@ -35,19 +33,14 @@ export function ConsoleHeader({ missionTitle, missionCode, statusLine }: Console
             <span className="px-2 text-dossier-muted">/</span>
             <span className="text-dossier-accent">RECRUIT</span>
           </div>
-          <motion.div
-            className="inline-flex items-center gap-2 rounded-md border border-dossier-border bg-dossier-bg/50 px-3 py-2"
-            animate={{ opacity: [0.75, 1, 0.75] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-          >
+          <div className="inline-flex items-center gap-2 rounded-md border border-dossier-border bg-dossier-bg/50 px-3 py-2">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-dossier-accent opacity-35" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-dossier-accent" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-dossier-accent shadow-[0_0_10px_rgba(0,255,157,0.45)]" />
             </span>
             <span className="font-mono text-[10px] uppercase tracking-wider text-dossier-muted">
               {statusLine}
             </span>
-          </motion.div>
+          </div>
         </div>
       </div>
     </header>

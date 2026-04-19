@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import { NextResponse } from "next/server";
 
 import { ARTIFACTS } from "@/data/mission1-mock";
@@ -24,27 +26,117 @@ function ensureQuestions(raw: Record<string, unknown>): Record<string, string> {
   return out;
 }
 
-export async function POST() {
-  const geminiKey = getGeminiApiKey();
-  const elevenKey = getElevenLabsApiKey();
+async function geminiParseJson(
+  geminiKey: string,
+  prompt: string,
+  generationConfig: Record<string, unknown>,
+): Promise<{ parsed: Record<string, unknown>; raw: string } | null> {
+  const requestBody = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig,
+  };
+  const { data } = await geminiGenerateContentFirstOk(geminiKey, GEMINI_TEXT_MODELS, requestBody);
+  const typed = data as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const raw =
+    typed?.candidates?.[0]?.content?.parts?.map((p) => p?.text).join("") ?? "";
+  const parsed = extractJsonObject(raw);
+  if (!parsed) return null;
+  return { parsed, raw };
+}
 
-  if (!geminiKey) {
-    return NextResponse.json(
-      { error: "Missing Gemini API key. Set GEMINI_API_KEY or VITE_GEMINI_API_KEY in repo-root .env" },
-      { status: 501 },
-    );
-  }
+function buildQuestionsPrompt(
+  catalog: Array<{
+    id: string;
+    type: string;
+    title: string;
+    tellType: string;
+    isSynthetic: boolean;
+  }>,
+  runNonce: string,
+) {
+  const typeGuide = [
+    "image: probe provenance, pixels, lighting, EXIF/ICC plausibility, generative tells.",
+    "audio: probe prosody, room tone, compression, transcript alignment, synthetic speech cues.",
+    "document: probe routing stamps, template drift, classification banners, registry consistency.",
+    "surveillance: probe encoder chain, noise, timestamp/hash plausibility vs social recompress.",
+    "social: probe UI fidelity, engagement consistency, verified-badge typography, copy style.",
+  ].join("\n");
 
-  const catalog = ARTIFACTS.map((a) => ({
-    id: a.id,
-    type: a.type,
-    title: a.title,
-    tellType: a.tellType,
-    isSynthetic: a.isSynthetic,
-  }));
+  return [
+    "Mission M01 — QUESTION SET ONLY (Meridian Summit / deepfake training).",
+    `Training run id (uniqueness anchor): ${runNonce}`,
+    "Every session MUST read differently: do not reuse canned analyst boilerplate, stock phrases, or the same sentence openings as generic security-training templates.",
+    "",
+    "Return STRICT JSON ONLY (no markdown). Shape:",
+    "{",
+    '  "sessionObjective": string,',
+    '  "assessmentQuestion": string,',
+    '  "artifactQuestions": { <artifact id>: string, ... }',
+    "}",
+    "",
+    "Categories (generate a fresh variant for EACH):",
+    '  (1) "sessionObjective": 2–4 sentences; briefing-style mission framing.',
+    '  (2) "assessmentQuestion": ONE demanding written question about campaign objective, failure modes, or how synthetic and real artifacts interact.',
+    `  (3) "artifactQuestions": exactly one string per artifact id, keyed by id. Each string is ONE sharp analyst prompt (not multiple choice).`,
+    "",
+    `artifactQuestions MUST contain exactly these keys: ${ARTIFACT_IDS.join(", ")}.`,
+    "For each artifact, tailor the prompt to its TYPE (see catalog) and the type guide:",
+    typeGuide,
+    "Vary analytical angles across artifacts: do not copy-paste the same question skeleton with different nouns.",
+    "",
+    "Artifact catalog:",
+    JSON.stringify(catalog, null, 2),
+  ].join("\n");
+}
 
-  const prompt = [
+function buildContentPrompt(
+  catalog: Array<{
+    id: string;
+    type: string;
+    title: string;
+    tellType: string;
+    isSynthetic: boolean;
+  }>,
+  runNonce: string,
+) {
+  return [
+    "Mission M01 — NARRATIVE / MEDIA CONTENT (no player-facing questions).",
+    `Content run id: ${runNonce}`,
+    "Return STRICT JSON ONLY (no markdown). Shape:",
+    "{",
+    '  "imagePrompts": { "art-press-pool": string, "art-garage-still": string },',
+    '  "secureLineTranscript": string[],',
+    '  "documentBody": string[],',
+    '  "socialPostText": string',
+    "}",
+    "",
+    "Rules:",
+    "- imagePrompts: detailed English prompts for Gemini image generation — photoreal press-pool still, and gritty CCTV garage still. No text in-image.",
+    "- secureLineTranscript: 4–6 lines, each starting with a fake timestamp like [00:12]; dialogue about summit leaks / optics (classified tone).",
+    "- documentBody: exactly 3 short paragraphs for a forged policy memo (Meridian office style).",
+    "- socialPostText: one plausible social post denying/forging the memo (<= 400 chars).",
+    "",
+    "Artifact catalog (context only):",
+    JSON.stringify(catalog, null, 2),
+  ].join("\n");
+}
+
+/** Single-call fallback if split JSON passes fail (same run nonce for coherence). */
+function buildCombinedPrompt(
+  catalog: Array<{
+    id: string;
+    type: string;
+    title: string;
+    tellType: string;
+    isSynthetic: boolean;
+  }>,
+  runNonce: string,
+) {
+  return [
     "You author a NEW training run for Mission M01 (Meridian Summit disinformation / deepfake detection).",
+    `Training run id: ${runNonce} — vary all player-facing wording; avoid stock training boilerplate.`,
     "Return STRICT JSON ONLY (no markdown). Shape:",
     "{",
     '  "sessionObjective": string,',
@@ -58,7 +150,7 @@ export async function POST() {
     "",
     "Rules:",
     `- artifactQuestions MUST contain exactly these keys: ${ARTIFACT_IDS.join(", ")}.`,
-    "- Each question must be a single sharp analyst prompt (not multiple choice) that tests reasoning for THAT artifact type.",
+    "- Each artifact question: one sharp analyst prompt for THAT artifact’s media type; do not reuse the same question template with swapped nouns.",
     "- sessionObjective: 2–4 sentences; assessmentQuestion: one demanding written question about campaign objective / failure modes.",
     "- imagePrompts: detailed English prompts for Gemini image generation — photoreal press-pool still, and gritty CCTV garage still. No text in-image.",
     "- secureLineTranscript: 4–6 lines, each starting with a fake timestamp like [00:12]; dialogue about summit leaks / optics (classified tone).",
@@ -68,30 +160,78 @@ export async function POST() {
     "Artifact catalog:",
     JSON.stringify(catalog, null, 2),
   ].join("\n");
+}
+
+export async function POST(req: Request) {
+  const geminiKey = getGeminiApiKey();
+  const elevenKey = getElevenLabsApiKey();
+
+  if (!geminiKey) {
+    return NextResponse.json(
+      { error: "Missing Gemini API key. Set GEMINI_API_KEY or VITE_GEMINI_API_KEY in repo-root .env" },
+      { status: 501 },
+    );
+  }
+
+  let runNonce: string = randomUUID();
+  try {
+    const body = (await req.json()) as { runId?: string };
+    if (typeof body?.runId === "string" && body.runId.trim().length >= 8) {
+      runNonce = body.runId.trim();
+    }
+  } catch {
+    /* empty body or invalid JSON — server nonce only */
+  }
+
+  const catalog = ARTIFACTS.map((a) => ({
+    id: a.id,
+    type: a.type,
+    title: a.title,
+    tellType: a.tellType,
+    isSynthetic: a.isSynthetic,
+  }));
+
+  const questionGen = {
+    temperature: 1,
+    topP: 0.95,
+    maxOutputTokens: 8192,
+  };
+  const contentGen = {
+    temperature: 0.95,
+    topP: 0.92,
+    maxOutputTokens: 8192,
+  };
 
   let spec: Record<string, unknown>;
   try {
-    const requestBody = {
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.95,
-        maxOutputTokens: 8192,
-      },
-    };
-    const { data } = await geminiGenerateContentFirstOk(geminiKey, GEMINI_TEXT_MODELS, requestBody);
-    const typed = data as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const raw =
-      typed?.candidates?.[0]?.content?.parts?.map((p) => p?.text).join("") ?? "";
-    const parsed = extractJsonObject(raw);
-    if (!parsed) {
-      return NextResponse.json(
-        { error: "Model did not return valid JSON.", raw: raw.slice(0, 2000) },
-        { status: 502 },
+    const [qResult, cResult] = await Promise.all([
+      geminiParseJson(geminiKey, buildQuestionsPrompt(catalog, runNonce), questionGen),
+      geminiParseJson(geminiKey, buildContentPrompt(catalog, runNonce), contentGen),
+    ]);
+
+    if (qResult?.parsed && cResult?.parsed) {
+      spec = { ...cResult.parsed, ...qResult.parsed };
+    } else {
+      const combined = await geminiParseJson(
+        geminiKey,
+        buildCombinedPrompt(catalog, runNonce),
+        { temperature: 0.98, topP: 0.95, maxOutputTokens: 8192 },
       );
+      if (!combined?.parsed) {
+        const rawHint = [qResult?.raw, cResult?.raw, combined?.raw]
+          .filter(Boolean)
+          .join("\n---\n")
+          .slice(0, 2000);
+        return NextResponse.json(
+          {
+            error: "Model did not return valid JSON (split or combined pass).",
+            raw: rawHint,
+          },
+          { status: 502 },
+        );
+      }
+      spec = combined.parsed;
     }
-    spec = parsed;
   } catch (e: unknown) {
     return NextResponse.json(
       { error: "Gemini crashed.", detail: String(e instanceof Error ? e.message : e) },
