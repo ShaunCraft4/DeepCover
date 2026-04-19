@@ -2,7 +2,26 @@ import { createClient } from '@supabase/supabase-js';
 import { getClientEnv } from './env.js';
 
 const env = getClientEnv();
+
+function applyMission1Links() {
+  const configured = String(env.mission1Url ?? '').trim();
+  document.querySelectorAll('a.js-mission1-link').forEach((a) => {
+    const extra = (a.getAttribute('data-mission1-path') || '').trim();
+    const tail = !extra || extra === '/' ? '/' : extra.startsWith('/') ? extra : `/${extra}`;
+
+    if (configured) {
+      const base = configured.replace(/\/+$/, '');
+      a.href = `${base}${tail === '/' ? '/' : tail}`;
+      return;
+    }
+
+    const root = `${window.location.origin}/mission1`.replace(/\/+$/, '');
+    a.href = `${root}${tail === '/' ? '/' : tail}`;
+  });
+}
+
 if (typeof window !== 'undefined') {
+  applyMission1Links();
   Object.defineProperty(window, 'DOSSIER_ENV', {
     value: Object.freeze({ ...env }),
     writable: false,
@@ -226,6 +245,10 @@ document.getElementById('dossier-sign-out')?.addEventListener('click', async () 
 
 document.querySelectorAll('.mission-select-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
+    if (btn.getAttribute('data-mission-external') === 'true') {
+      recordMissionStart(btn.getAttribute('data-mission') || 'deepfake');
+      return;
+    }
     const route = btn.getAttribute('data-mission-route');
     if (!route) return;
     recordMissionStart(btn.getAttribute('data-mission') || route);
