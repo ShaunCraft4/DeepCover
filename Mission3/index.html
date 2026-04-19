@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 03: Cyber Defense | DeepCover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#050505;--panel:#111111;--panel2:#0d0d0d;
+  --border:#1e1e1e;--border2:#252525;
+  --accent:#00FF9D;--accent2:#00cc7a;
+  --accent-dim:rgba(0,255,157,0.1);
+  --text-primary:#f0f0f0;--text-secondary:#888;--text-muted:#444;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--display:'Syne',sans-serif;
+  --danger:#EF4444;--warning:#F59E0B;--info:#3B82F6;
+}
+html{overflow-x:hidden}
+body{background:var(--black);color:var(--text-primary);font-family:var(--sans);line-height:1.6;height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--black)}::-webkit-scrollbar-thumb{background:var(--border2)}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-size:256px;pointer-events:none;z-index:9999;opacity:.4}
+
+.phase{display:none;width:100%;height:100vh;flex-direction:column}.phase.active{display:flex}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scanLine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes grantFlash{0%{opacity:0;transform:scale(.92)}30%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1)}}
+
+/* TOP BAR */
+.game-bar{background:rgba(5,5,5,.97);border-bottom:1px solid var(--border);padding:.55rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.gb-quit{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.28rem .7rem;cursor:pointer;transition:all .2s}
+.gb-quit:hover{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.gb-title{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent)}
+.gb-step{font-family:var(--mono);font-size:.52rem;color:var(--text-muted)}
+
+/* BRIEFING */
+#phase-briefing{justify-content:center;align-items:center;position:relative;overflow:hidden}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.3;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);pointer-events:none}
+.brief-wrap{max-width:640px;width:100%;padding:2rem;text-align:center;position:relative;z-index:2}
+.classif{font-family:var(--mono);font-size:.54rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.5rem;animation:fadeUp .5s ease both}
+.badge{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(0,255,157,.25);padding:.4rem 1.2rem;margin-bottom:1rem;animation:fadeUp .5s .08s ease both}
+.badge::before{content:'';display:block;width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+.brief-title{font-family:var(--display);font-size:clamp(2.2rem,4vw,3.4rem);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:.5rem;animation:fadeUp .5s .14s ease both}
+.brief-title .ac{color:var(--accent)}
+.brief-sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:2rem;animation:fadeUp .5s .2s ease both}
+.brief-body{background:var(--panel);border:1px solid var(--border);padding:1.6rem;text-align:left;margin-bottom:1.5rem;position:relative;overflow:hidden;animation:fadeUp .5s .26s ease both}
+.brief-body::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanLine 3s linear infinite}
+.brief-body p{font-size:.88rem;color:var(--text-secondary);font-weight:300;line-height:1.75;margin-bottom:.75rem}
+.brief-body p:last-child{margin-bottom:0}
+.brief-body strong{color:var(--text-primary);font-weight:400}
+.btn-primary{font-family:var(--mono);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--black);background:var(--accent);padding:.9rem 3rem;border:none;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;animation:fadeUp .5s .32s ease both}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);transition:transform .4s}
+.btn-primary:hover::after{transform:translateX(100%)}
+.btn-primary:hover{background:#fff;transform:translateY(-2px);box-shadow:0 0 40px rgba(0,255,157,.35)}
+
+/* HUB */
+#phase-hub{overflow-y:auto}
+.hub-hd{background:rgba(5,5,5,.97);border-bottom:1px solid var(--border);padding:.8rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.hub-title{font-family:var(--display);font-size:1rem;font-weight:700}
+.hub-sub{font-family:var(--mono);font-size:.52rem;color:var(--text-muted)}
+.hub-body{padding:2rem;max-width:1100px;margin:0 auto;width:100%}
+.hub-intro{font-family:var(--mono);font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem}
+.modules-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.mod-card{background:var(--panel2);padding:1.6rem;cursor:pointer;transition:all .2s;border-top:2px solid transparent;position:relative}
+.mod-card:hover{background:rgba(0,255,157,.03);border-top-color:rgba(0,255,157,.3)}
+.mod-card.done{border-top-color:var(--accent)}
+.mod-icon{font-size:1.6rem;margin-bottom:.75rem;display:block}
+.mod-num{font-family:var(--mono);font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.3rem}
+.mod-name{font-family:var(--display);font-size:1.1rem;font-weight:700;margin-bottom:.4rem}
+.mod-desc{font-size:.82rem;color:var(--text-secondary);font-weight:300;line-height:1.65;margin-bottom:.85rem}
+.mod-learn{font-family:var(--mono);font-size:.52rem;color:var(--text-muted);border-left:2px solid var(--border2);padding-left:.6rem;line-height:1.6;margin-bottom:.9rem}
+.mod-cta{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:.4rem}.mod-cta::after{content:'→'}
+.mod-score-badge{position:absolute;top:.8rem;right:.8rem;font-family:var(--mono);font-size:.5rem;background:rgba(0,255,157,.1);border:1px solid rgba(0,255,157,.3);color:var(--accent);padding:.2rem .5rem}
+.btn-sec{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);background:transparent;padding:.75rem 2rem;border:1px solid var(--border2);cursor:pointer;transition:all .2s}
+.btn-sec:hover{color:var(--accent);border-color:rgba(0,255,157,.3)}
+
+/* PHISHING */
+#phase-phishing .game-body{flex:1;display:grid;grid-template-columns:280px 1fr;overflow:hidden;min-height:0}
+.ph-list{border-right:1px solid var(--border);overflow-y:auto;background:var(--panel2)}
+.ph-list-hd{padding:.65rem 1rem;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)}
+.ph-item{padding:.75rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:all .15s;position:relative}
+.ph-item:hover{background:rgba(255,255,255,.02)}
+.ph-item.active{background:rgba(0,255,157,.04);border-left:2px solid var(--accent)}
+.ph-item.tagged-real{border-left:2px solid var(--accent)}
+.ph-item.tagged-phish{border-left:2px solid var(--danger)}
+.ph-sender{font-family:var(--mono);font-size:.56rem;color:var(--text-primary);margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-subject{font-size:.75rem;color:var(--text-secondary);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.2rem}
+.ph-time{font-family:var(--mono);font-size:.48rem;color:var(--text-muted)}
+.ph-tag{position:absolute;right:.5rem;top:.55rem;font-family:var(--mono);font-size:.44rem;letter-spacing:.08em;padding:.1rem .35rem;border:1px solid}
+.ph-tag.real{color:var(--accent);border-color:rgba(0,255,157,.3)}.ph-tag.phish{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.ph-viewer{display:flex;flex-direction:column;overflow:hidden}
+.ph-email-hd{padding:1rem 1.5rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.ph-email-subject{font-family:var(--display);font-size:1rem;font-weight:700;margin-bottom:.35rem}
+.ph-email-from{font-family:var(--mono);font-size:.56rem;color:var(--text-secondary)}
+.ph-email-from span{color:var(--text-primary)}
+.ph-email-body{flex:1;overflow-y:auto;padding:1.25rem 1.5rem}
+.ph-body-txt{font-size:.88rem;color:var(--text-secondary);font-weight:300;line-height:1.85;white-space:pre-wrap;margin-bottom:1rem}
+.ph-link{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.62rem;color:var(--info);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);padding:.3rem .65rem;margin:.4rem 0;cursor:default}
+.ph-attachment{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.62rem;color:var(--warning);background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);padding:.3rem .65rem;margin:.4rem 0}
+.ph-actions{padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.75rem;align-items:center;flex-shrink:0}
+.ph-action-lbl{font-family:var(--mono);font-size:.52rem;color:var(--text-muted);margin-right:.25rem}
+.btn-real{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:rgba(0,255,157,.06);border:1px solid rgba(0,255,157,.25);padding:.55rem 1.4rem;cursor:pointer;transition:all .2s}
+.btn-real:hover,.btn-real.selected{background:rgba(0,255,157,.15);border-color:var(--accent)}
+.btn-phish{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--danger);background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);padding:.55rem 1.4rem;cursor:pointer;transition:all .2s}
+.btn-phish:hover,.btn-phish.selected{background:rgba(239,68,68,.15);border-color:var(--danger)}
+.ph-reveal-btn{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--black);background:var(--accent);padding:.55rem 1.4rem;border:none;cursor:pointer;transition:all .2s;margin-left:auto}
+.ph-reveal-btn:hover{background:#fff}
+.ph-ann{display:flex;align-items:flex-start;gap:.5rem;font-family:var(--mono);font-size:.54rem;line-height:1.5;padding:.4rem .65rem;border-left:2px solid}
+.ph-ann.safe{color:var(--accent);border-color:var(--accent);background:rgba(0,255,157,.04)}
+.ph-ann.danger{color:var(--danger);border-color:var(--danger);background:rgba(239,68,68,.04)}
+.ph-ann.warning{color:var(--warning);border-color:var(--warning);background:rgba(245,158,11,.04)}
+
+/* PHISHING OUTCOMES */
+#phase-phishing-outcomes .outcomes-body{flex:1;overflow-y:auto;padding:2rem}
+.outcomes-hero{text-align:center;padding:1.5rem 0 2rem;animation:fadeUp .5s ease}
+.outcomes-fraction{font-family:var(--display);font-size:4rem;font-weight:800;letter-spacing:-.03em}
+.outcomes-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem}
+.outcomes-sub{font-size:.86rem;color:var(--text-secondary);font-weight:300}
+.outcome-card{background:var(--panel2);border:1px solid var(--border);margin-bottom:.75rem;overflow:hidden;animation:fadeUp .35s ease both}
+.outcome-hd{padding:.85rem 1.25rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:1px solid var(--border)}
+.outcome-email-info{flex:1;min-width:0}
+.outcome-subject{font-family:var(--display);font-size:.95rem;font-weight:700;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.outcome-from{font-family:var(--mono);font-size:.5rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.outcome-verdict{font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .7rem;border:1px solid;flex-shrink:0}
+.outcome-verdict.correct{color:var(--accent);border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.06)}
+.outcome-verdict.wrong{color:var(--danger);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)}
+.outcome-body{padding:.85rem 1.25rem;display:flex;flex-direction:column;gap:.3rem}
+.outcome-player-tag{font-family:var(--mono);font-size:.5rem;color:var(--text-muted);margin-bottom:.4rem}
+.outcomes-finish{text-align:center;padding:1.5rem 0}
+
+/* SOCIAL ENGINEERING */
+#phase-social .game-body{flex:1;display:grid;grid-template-columns:1fr 380px;overflow:hidden;min-height:0}
+.soc-call-panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);background:#030303}
+.soc-caller{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1rem;flex-shrink:0;background:var(--panel2)}
+.soc-caller-icon{width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.soc-caller-name{font-family:var(--display);font-size:.95rem;font-weight:700;margin-bottom:.1rem}
+.soc-caller-role{font-family:var(--mono);font-size:.52rem;color:var(--text-muted)}
+.soc-call-status{font-family:var(--mono);font-size:.48rem;color:var(--danger);margin-left:auto;display:flex;align-items:center;gap:.35rem}
+.soc-call-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--danger);animation:pulse 1.5s infinite}
+.soc-transcript{flex:1;overflow-y:auto;padding:1rem}
+.soc-msg{margin-bottom:1rem;animation:slideIn .25s ease}
+.soc-msg.them{display:flex;gap:.65rem;align-items:flex-start}
+.soc-msg.you{display:flex;gap:.65rem;align-items:flex-start;flex-direction:row-reverse}
+.soc-bubble{max-width:85%;padding:.65rem .9rem;font-size:.84rem;line-height:1.65}
+.soc-bubble.them{background:var(--panel);border:1px solid var(--border);border-radius:0 6px 6px 6px}
+.soc-bubble.you{border-radius:6px 0 6px 6px;border:1px solid}
+.soc-bubble.you.good{background:rgba(0,255,157,.08);border-color:rgba(0,255,157,.25);color:var(--accent)}
+.soc-bubble.you.warning{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--warning)}
+.soc-bubble.you.bad{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--danger)}
+.soc-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;margin-top:.1rem}
+.soc-av.them{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
+.soc-av.you{background:rgba(0,255,157,.12);border:1px solid rgba(0,255,157,.3);color:var(--accent)}
+.soc-options-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--panel2)}
+.soc-options-hd{padding:.9rem 1.1rem;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);flex-shrink:0}
+.soc-options-body{flex:1;overflow-y:auto;padding:.75rem}
+.soc-opt{border:1px solid var(--border2);padding:.85rem 1rem;margin-bottom:.5rem;cursor:pointer;transition:all .2s;background:transparent}
+.soc-opt:hover{border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.02)}
+.soc-opt-text{font-size:.83rem;color:var(--text-primary);line-height:1.5;margin-bottom:.3rem}
+.soc-opt-hint{font-family:var(--mono);font-size:.5rem;color:var(--text-muted)}
+.soc-feedback{padding:.9rem 1.1rem;border-top:1px solid var(--border);font-size:.82rem;line-height:1.65;flex-shrink:0;min-height:100px}
+.soc-feedback.good{border-left:3px solid var(--accent)}.soc-feedback.warning{border-left:3px solid var(--warning)}.soc-feedback.bad{border-left:3px solid var(--danger)}
+.soc-fb-label{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.35rem}
+.soc-fb-label.good{color:var(--accent)}.soc-fb-label.warning{color:var(--warning)}.soc-fb-label.bad{color:var(--danger)}
+.soc-next-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--black);background:var(--accent);padding:.55rem 1.25rem;border:none;cursor:pointer;margin-top:.65rem;transition:all .2s;display:none}
+.soc-next-btn:hover{background:#fff}.soc-next-btn.show{display:inline-block}
+
+/* PASSWORD + 2FA GAME */
+#phase-twofactor .tfa-arena{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0}
+.tfa-left{overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:.9rem;background:var(--panel2)}
+.tfa-right{background:#030303;display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)}
+.tfa-rating-bar{background:var(--panel);border:1px solid var(--border);padding:.75rem 1rem}
+.tfa-rating-label{font-family:var(--mono);font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.45rem}
+.tfa-rating-track{height:6px;background:var(--border);overflow:hidden;margin-bottom:.4rem}
+.tfa-rating-fill{height:100%;width:0%;background:var(--danger);transition:width .8s ease,background .8s ease}
+.tfa-rating-val{font-family:var(--display);font-size:1.4rem;font-weight:800}
+.tfa-phase{display:none}.tfa-phase.active{display:flex;flex-direction:column;gap:.7rem;animation:fadeUp .4s ease}
+.tfa-phase-num{font-family:var(--mono);font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
+.tfa-phase-title{font-family:var(--display);font-size:1.35rem;font-weight:800}
+.tfa-phase-desc{font-size:.84rem;color:var(--text-secondary);font-weight:300;line-height:1.7}
+.tfa-pw-cards{display:flex;flex-direction:column;gap:.45rem}
+.tfa-pw-card{border:1px solid var(--border2);padding:.9rem 1.1rem;cursor:pointer;transition:all .2s;background:var(--panel)}
+.tfa-pw-card:hover,.tfa-pw-card.selected{border-color:rgba(0,255,157,.4);background:rgba(0,255,157,.04)}
+.tfa-pw-card-tier{font-family:var(--mono);font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.25rem;font-weight:600}
+.tfa-pw-card-pw{font-family:var(--mono);font-size:.82rem;color:var(--text-primary);margin-bottom:.2rem}
+.tfa-pw-card-time{font-family:var(--mono);font-size:.48rem;color:var(--text-muted)}
+.tfa-or-row{display:flex;flex-direction:column;gap:.45rem}
+.tfa-or-txt{font-family:var(--mono);font-size:.48rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase}
+.tfa-pw-custom-wrap{display:flex;gap:.45rem}
+.tfa-pw-custom-in{flex:1;background:var(--panel);border:1px solid var(--border2);outline:none;font-family:var(--mono);font-size:.82rem;color:var(--text-primary);padding:.6rem .8rem;transition:border-color .2s}
+.tfa-pw-custom-in:focus{border-color:rgba(0,255,157,.4)}
+.tfa-pw-show-btn{font-family:var(--mono);font-size:.48rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);background:var(--panel);border:1px solid var(--border2);padding:0 .7rem;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tfa-pw-show-btn:hover{color:var(--accent)}
+.tfa-cst-bar-track{height:4px;background:var(--border);overflow:hidden}
+.tfa-cst-bar-fill{height:100%;width:0%;transition:width .4s ease,background .4s ease;background:var(--border2)}
+.tfa-cst-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.48rem;color:var(--text-muted);margin-top:.25rem}
+.tfa-lock-btn{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--black);background:var(--accent);padding:.75rem 1.5rem;border:none;cursor:pointer;transition:all .2s;width:100%}
+.tfa-lock-btn:hover{background:#fff}
+.tfa-lock-btn:disabled{background:var(--border2);color:var(--text-muted);cursor:not-allowed}
+.tfa-2fa-cards{display:flex;flex-direction:column;gap:.45rem}
+.tfa-2fa-card{border:1px solid var(--border2);padding:1rem 1.1rem;cursor:pointer;transition:all .2s;background:var(--panel);display:flex;align-items:flex-start;gap:.85rem}
+.tfa-2fa-card:hover{background:rgba(0,255,157,.03)}
+.tfa-2fa-card.danger-card:hover{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.03)}
+.tfa-2fa-card.warning-card:hover{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.03)}
+.tfa-2fa-card.safe-card:hover{border-color:rgba(0,255,157,.35)}
+.tfa-2fa-card-icon{font-size:1.4rem;flex-shrink:0;margin-top:.1rem}
+.tfa-2fa-card-body{flex:1}
+.tfa-2fa-card-name{font-family:var(--display);font-size:.95rem;font-weight:700;margin-bottom:.2rem}
+.tfa-2fa-card-desc{font-size:.78rem;color:var(--text-secondary);font-weight:300;line-height:1.55;margin-bottom:.3rem}
+.tfa-2fa-card-pts{font-family:var(--mono);font-size:.48rem;color:var(--text-muted)}
+.tfa-result-verdict{font-family:var(--display);font-size:2rem;font-weight:800;letter-spacing:-.02em;padding:1rem 1.25rem;text-align:center;border:1px solid;animation:fadeUp .4s ease}
+.tfa-result-verdict.breached{color:var(--danger);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+.tfa-result-verdict.secured{color:var(--accent);border-color:rgba(0,255,157,.4);background:rgba(0,255,157,.06)}
+.tfa-result-verdict.partial{color:var(--warning);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)}
+.tfa-score-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.54rem;padding:.4rem .75rem;background:var(--panel);border:1px solid var(--border)}
+.tfa-lesson{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);padding:1rem 1.25rem;font-size:.84rem;color:var(--text-secondary);line-height:1.7;font-weight:300}
+.tfa-lesson strong{color:var(--text-primary);font-weight:400}
+.tfa-term-hd{padding:.55rem .9rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.tfa-term-hd>span:first-child{font-family:var(--mono);font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted)}
+.tfa-term-status{font-family:var(--mono);font-size:.44rem;letter-spacing:.1em;padding:.15rem .4rem;border:1px solid;text-transform:uppercase}
+.tfa-term-status.standby{color:var(--text-muted);border-color:var(--border)}
+.tfa-term-status.active{color:var(--danger);border-color:rgba(239,68,68,.3);animation:pulse 1s infinite}
+.tfa-term-status.done-ok{color:var(--accent);border-color:rgba(0,255,157,.3)}
+.tfa-term-status.done-fail{color:var(--danger);border-color:rgba(239,68,68,.5)}
+.tfa-terminal{flex:1;overflow-y:auto;padding:.75rem .9rem;font-family:var(--mono);font-size:.58rem;line-height:1.85}
+.term-line{color:var(--text-secondary)}.term-line.dim{color:var(--text-muted)}.term-line.hit{color:var(--danger);font-weight:500}
+.term-line.miss{color:var(--text-muted)}.term-line.sys{color:var(--info)}.term-line.ok{color:var(--accent)}.term-line.warn{color:var(--warning)}
+
+/* OSINT - Instagram Style */
+#phase-osint .game-body{flex:1;overflow-y:auto;background:#030303}
+.ig-profile-hd{background:var(--panel2);border-bottom:1px solid var(--border);padding:1.5rem 2rem;display:flex;align-items:flex-start;gap:2rem;max-width:935px;margin:0 auto;width:100%}
+.ig-av-big{width:77px;height:77px;border-radius:50%;background:linear-gradient(45deg,rgba(0,255,157,.25),rgba(0,204,122,.08));border:2px solid rgba(0,255,157,.35);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:1.5rem;font-weight:800;color:var(--accent);flex-shrink:0}
+.ig-profile-info{flex:1}
+.ig-username-row{display:flex;align-items:center;gap:1rem;margin-bottom:.65rem}
+.ig-username{font-family:var(--display);font-size:1.2rem;font-weight:700}
+.ig-public-badge{font-family:var(--mono);font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border:1px solid var(--border2);padding:.15rem .45rem}
+.ig-stats-row{display:flex;gap:2rem;margin-bottom:.55rem}
+.ig-stat{font-size:.84rem;color:var(--text-secondary)}
+.ig-stat strong{color:var(--text-primary)}
+.ig-bio-name{font-weight:600;font-size:.88rem;margin-bottom:.2rem}
+.ig-bio-txt{font-size:.84rem;color:var(--text-secondary);font-weight:300;line-height:1.6}
+.ig-warning-banner{background:rgba(245,158,11,.04);border-bottom:1px solid rgba(245,158,11,.12);padding:.55rem 2rem;font-family:var(--mono);font-size:.5rem;color:var(--warning);display:flex;align-items:center;gap:.5rem;max-width:935px;margin:0 auto;width:100%}
+.ig-grid-wrap{max-width:935px;margin:0 auto;width:100%;padding:2px 0}
+.ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.ig-grid-item{position:relative;aspect-ratio:1;cursor:pointer;overflow:hidden;background:var(--panel)}
+.ig-grid-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.ig-grid-item:hover img{transform:scale(1.07)}
+.ig-grid-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:1.25rem;opacity:0;transition:opacity .25s;font-size:.85rem;font-weight:600;color:#fff}
+.ig-grid-item:hover .ig-grid-overlay{opacity:1}
+.ig-found-badge{position:absolute;top:.4rem;right:.4rem;background:var(--danger);color:#fff;font-family:var(--mono);font-size:.44rem;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700}
+.ig-grid-item.found .ig-found-badge{display:flex}
+.ig-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:1000;align-items:center;justify-content:center}
+.ig-modal.open{display:flex}
+.ig-modal-inner{background:var(--panel2);border:1px solid var(--border);max-width:900px;width:96%;max-height:90vh;display:grid;grid-template-columns:1fr 370px;overflow:hidden;position:relative}
+.ig-modal-photo-wrap{background:#000;display:flex;align-items:center;justify-content:center}
+.ig-modal-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.ig-modal-side{display:flex;flex-direction:column;border-left:1px solid var(--border);max-height:90vh;overflow:hidden}
+.ig-modal-side-hd{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+.ig-modal-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(0,255,157,.15),rgba(0,204,122,.06));border:1px solid rgba(0,255,157,.25);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.6rem;color:var(--accent);flex-shrink:0;font-family:var(--display)}
+.ig-modal-uname{font-weight:600;font-size:.88rem;margin-bottom:.05rem}
+.ig-modal-time-txt{font-family:var(--mono);font-size:.44rem;color:var(--text-muted)}
+.ig-modal-caption-area{flex:1;overflow-y:auto;padding:1rem}
+.ig-modal-caption{font-size:.85rem;color:var(--text-secondary);line-height:1.8;font-weight:300}
+.ig-modal-instr{font-family:var(--mono);font-size:.48rem;color:var(--warning);margin-top:.85rem;padding:.35rem .55rem;border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.03);line-height:1.5}
+.ig-modal-ft{padding:.75rem 1rem;border-top:1px solid var(--border);font-family:var(--mono);font-size:.46rem;color:var(--text-muted);display:flex;gap:1rem;flex-shrink:0}
+.ig-modal-close{position:absolute;top:.75rem;right:.75rem;background:rgba(0,0,0,.7);border:1px solid var(--border);color:var(--text-primary);font-size:1rem;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1001;transition:all .2s;border-radius:50%}
+.ig-modal-close:hover{background:var(--danger);border-color:var(--danger)}
+.osint-tag{color:var(--warning);cursor:pointer;border-bottom:1px dashed rgba(245,158,11,.6);transition:all .15s;padding:0 1px}
+.osint-tag:hover{background:rgba(245,158,11,.1);border-bottom-color:var(--warning)}
+.osint-tag.revealed{color:var(--danger);border-bottom:1px solid var(--danger);cursor:default;pointer-events:none}
+.osint-counter{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--panel);border:1px solid var(--border);padding:.85rem 1.1rem;z-index:500;min-width:210px;display:none}
+.osint-counter.visible{display:block;animation:slideIn .3s ease}
+.osint-counter-hd{font-family:var(--mono);font-size:.44rem;letter-spacing:.12em;text-transform:uppercase;color:var(--danger);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+.osint-counter-hd::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--danger);animation:pulse 1.5s infinite;flex-shrink:0}
+.osint-counter-count{font-family:var(--display);font-size:1.8rem;font-weight:800;color:var(--danger);line-height:1;margin-bottom:.1rem}
+.osint-counter-sub{font-family:var(--mono);font-size:.44rem;color:var(--text-muted);margin-bottom:.65rem}
+.osint-counter-reveal-btn{font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--black);background:var(--danger);padding:.5rem .85rem;border:none;cursor:pointer;transition:all .2s;width:100%;display:none}
+.osint-counter-reveal-btn.show{display:block}
+.osint-counter-reveal-btn:hover{filter:brightness(1.15)}
+.osint-results-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:2000;overflow-y:auto;padding:2rem 1rem}
+.osint-results-overlay.open{display:block;animation:fadeUp .4s ease}
+.osint-results-inner{max-width:760px;margin:0 auto;width:100%}
+.osint-results-hero{text-align:center;padding:2rem 0 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.osint-results-icon{font-size:2.5rem;margin-bottom:.6rem}
+.osint-results-title{font-family:var(--display);font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem}
+.osint-results-fraction{font-family:var(--display);font-size:3.5rem;font-weight:800;margin:.5rem 0 .2rem;line-height:1}
+.osint-results-sub{font-family:var(--mono);font-size:.54rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase}
+.osint-vuln-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.5rem}
+.osint-vuln-card{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--danger);padding:1rem 1.25rem;animation:fadeUp .3s ease both}
+.osint-vuln-card.not-found{border-left-color:var(--border2);opacity:.45}
+.osint-vuln-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.45rem;gap:.75rem}
+.osint-vuln-label{font-family:var(--mono);font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--danger);flex-shrink:0}
+.osint-vuln-label.not-found{color:var(--text-muted)}
+.osint-vuln-found-badge{font-family:var(--mono);font-size:.44rem;letter-spacing:.08em;text-transform:uppercase;padding:.12rem .4rem;border:1px solid}
+.osint-vuln-found-badge.found{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.osint-vuln-found-badge.missed{color:var(--text-muted);border-color:var(--border2)}
+.osint-vuln-value{font-family:var(--display);font-size:.95rem;font-weight:700;margin-bottom:.3rem}
+.osint-vuln-value.not-found{color:var(--text-muted)}
+.osint-vuln-risk{font-size:.82rem;color:var(--text-secondary);font-weight:300;line-height:1.65}
+.osint-vuln-sq{font-family:var(--mono);font-size:.48rem;color:var(--text-muted);margin-top:.4rem;border-top:1px solid var(--border);padding-top:.4rem}
+.osint-results-lesson{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);padding:1rem 1.25rem;font-size:.84rem;color:var(--text-secondary);line-height:1.7;font-weight:300;margin-bottom:1.5rem}
+.osint-results-lesson strong{color:var(--text-primary);font-weight:400}
+.osint-results-finish{text-align:center;padding-bottom:2rem}
+
+/* RESULT + OVERALL */
+#phase-result{justify-content:center;align-items:center;position:relative;overflow:hidden}
+.result-wrap{max-width:520px;width:100%;padding:2rem;text-align:center;position:relative;z-index:2}
+.result-mod-name{font-family:var(--mono);font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem}
+.result-score-big{font-family:var(--display);font-size:4rem;font-weight:800;letter-spacing:-.04em;margin-bottom:.25rem;animation:fadeUp .5s ease}
+.result-score-sub{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:var(--text-muted);margin-bottom:1.5rem}
+.result-lesson-card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);padding:1.1rem 1.25rem;text-align:left;margin-bottom:1.5rem;animation:fadeUp .5s .1s ease both}
+.result-lesson-lbl{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem}
+.result-lesson-txt{font-size:.86rem;color:var(--text-secondary);font-weight:300;line-height:1.7}
+.result-btns{display:flex;gap:.75rem;justify-content:center;animation:fadeUp .5s .2s ease both}
+#phase-overall{justify-content:center;align-items:center;overflow-y:auto}
+.overall-wrap{max-width:580px;width:100%;padding:2rem;text-align:center}
+.overall-title{font-family:var(--display);font-size:2rem;font-weight:800;margin-bottom:.35rem;animation:fadeUp .5s ease}
+.overall-sub{font-family:var(--mono);font-size:.56rem;color:var(--text-muted);letter-spacing:.1em;margin-bottom:2rem;animation:fadeUp .5s .08s ease both}
+.overall-scores{background:var(--panel);border:1px solid var(--border);margin-bottom:1.25rem;animation:fadeUp .5s .14s ease both}
+.ov-row{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)}
+.ov-row:last-child{border-bottom:none}
+.ov-name{font-family:var(--mono);font-size:.6rem;color:var(--text-secondary)}
+.ov-score{font-family:var(--display);font-size:1.1rem;font-weight:700}
+.ov-bar{flex:1;height:3px;background:var(--border);margin:0 1rem;overflow:hidden}
+.ov-bar-fill{height:100%;background:var(--accent)}
+.overall-total{font-family:var(--display);font-size:2.8rem;font-weight:800;letter-spacing:-.03em;color:var(--accent);margin-bottom:.25rem;animation:fadeUp .5s .2s ease both}
+.overall-grade-lbl{font-family:var(--mono);font-size:.56rem;color:var(--text-muted);margin-bottom:1.5rem}
+.btn-next{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--black);background:var(--accent);padding:.7rem 2rem;border:none;cursor:pointer;transition:all .2s}
+.btn-next:hover{background:#fff}
+</style>
+</head>
+<body>
+
+<!-- BRIEFING -->
+<div id="phase-briefing" class="phase active">
+  <div class="bg-grid"></div>
+  <div class="brief-wrap">
+    <div class="classif">TOP SECRET // CLASSIFIED // OPERATION: NIGHTFALL</div>
+    <div class="badge">&#9672; Mission 03 Active</div>
+    <h1 class="brief-title">Cyber<br><span class="ac">Defense</span></h1>
+    <p class="brief-sub">// Security Awareness Training - Level 3 Clearance</p>
+    <div class="brief-body">
+      <p>PHANTOM-9 is targeting DeepCover agents through <strong>everyday attack vectors</strong> - weak passwords, phishing emails, social engineering calls, and data exposed on social media.</p>
+      <p>You will train across <strong>four real-world scenarios</strong>. Each one teaches a technique attackers use against real people, and what you can do to stop them.</p>
+      <p>This is not a simulation. These are the actual methods used to compromise accounts, steal identities, and breach organisations every day.</p>
+    </div>
+    <button class="btn-primary" onclick="showPhase('hub')">Enter Training Center &rarr;</button>
+  </div>
+</div>
+
+<!-- HUB -->
+<div id="phase-hub" class="phase">
+  <div class="hub-hd">
+    <div>
+      <div class="hub-title">Cyber Defense Training Center</div>
+      <div class="hub-sub">Mission 03 - Select a module to begin</div>
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center">
+      <span id="hub-progress" style="font-family:var(--mono);font-size:.52rem;color:var(--text-muted)">0 / 4 complete</span>
+      <button class="btn-sec" onclick="showOverall()">View Results &rarr;</button>
+      <button class="btn-sec" onclick="showPhase('briefing')">&larr; Back</button>
+    </div>
+  </div>
+  <div class="hub-body">
+    <div class="hub-intro">// Choose a training module</div>
+    <div class="modules-grid">
+      <div class="mod-card" id="mod-phishing" onclick="startModule('phishing')">
+        <span class="mod-icon">&#128247;</span>
+        <div class="mod-num">Module 01</div>
+        <div class="mod-name">Phishing Detection</div>
+        <div class="mod-desc">Five emails land in your inbox. Some are real. Some will steal your credentials. Can you tell the difference?</div>
+        <div class="mod-learn">You'll learn: The specific red flags in phishing emails, how attackers spoof domains, and why urgency is a weapon.</div>
+        <div class="mod-cta">Begin Training</div>
+        <div class="mod-score-badge" id="score-phishing" style="display:none"></div>
+      </div>
+      <div class="mod-card" id="mod-social" onclick="startModule('social')">
+        <span class="mod-icon">&#128222;</span>
+        <div class="mod-num">Module 02</div>
+        <div class="mod-name">Social Engineering</div>
+        <div class="mod-desc">Your phone rings. It's "IT Support" - or is it? Navigate a live social engineering call and spot the manipulation in real time.</div>
+        <div class="mod-learn">You'll learn: How pretexting works, what information is dangerous to share, and the one rule that stops most attacks.</div>
+        <div class="mod-cta">Begin Training</div>
+        <div class="mod-score-badge" id="score-social" style="display:none"></div>
+      </div>
+      <div class="mod-card" id="mod-twofactor" onclick="startModule('twofactor')">
+        <span class="mod-icon">&#128272;</span>
+        <div class="mod-num">Module 03</div>
+        <div class="mod-name">Password &amp; Two-Factor Auth</div>
+        <div class="mod-desc">Create a password and watch PHANTOM-9 try to crack it. Then see what happens when they have your password but face three different levels of authentication.</div>
+        <div class="mod-learn">You'll learn: What makes a password strong, how brute force works, and why an authenticator app is your best defence against credential theft.</div>
+        <div class="mod-cta">Begin Training</div>
+        <div class="mod-score-badge" id="score-twofactor" style="display:none"></div>
+      </div>
+      <div class="mod-card" id="mod-osint" onclick="startModule('osint')">
+        <span class="mod-icon">&#128373;&#65039;</span>
+        <div class="mod-num">Module 04</div>
+        <div class="mod-name">OSINT Awareness</div>
+        <div class="mod-desc">Browse a real-looking social media profile. Click what you think is harmless. Watch PHANTOM-9 build a complete attack profile from public posts.</div>
+        <div class="mod-learn">You'll learn: What oversharing enables, how security questions get answered from public data, and what to stop posting.</div>
+        <div class="mod-cta">Begin Training</div>
+        <div class="mod-score-badge" id="score-osint" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHISHING GAME -->
+<div id="phase-phishing" class="phase">
+  <div class="game-bar">
+    <button class="gb-quit" onclick="showHub()">Quit to Menu</button>
+    <span class="gb-title">Module 01: Phishing Detection</span>
+    <span class="gb-step" id="ph-step">Tag all 5 emails, then reveal</span>
+  </div>
+  <div class="game-body" style="flex:1;display:grid;grid-template-columns:280px 1fr;overflow:hidden;min-height:0">
+    <div class="ph-list">
+      <div class="ph-list-hd">Inbox (5 messages)</div>
+      <div id="ph-email-list"></div>
+    </div>
+    <div class="ph-viewer" id="ph-viewer">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-family:var(--mono);font-size:.6rem">Select an email to read</div>
+    </div>
+  </div>
+</div>
+
+<!-- PHISHING OUTCOMES -->
+<div id="phase-phishing-outcomes" class="phase">
+  <div class="game-bar">
+    <button class="gb-quit" onclick="showHub()">Quit to Menu</button>
+    <span class="gb-title">Module 01: Phishing Detection</span>
+    <span class="gb-step">Review your answers</span>
+  </div>
+  <div class="outcomes-body">
+    <div style="max-width:760px;margin:0 auto;width:100%">
+      <div class="outcomes-hero">
+        <div class="outcomes-lbl">Emails correctly identified</div>
+        <div class="outcomes-fraction" id="ph-outcomes-fraction"></div>
+        <div class="outcomes-sub">Review each email below to see what the red flags were.</div>
+      </div>
+      <div id="ph-outcomes-list"></div>
+      <div class="outcomes-finish">
+        <button class="btn-primary" id="ph-complete-btn">View Score &rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SOCIAL ENGINEERING -->
+<div id="phase-social" class="phase">
+  <div class="game-bar">
+    <button class="gb-quit" onclick="showHub()">Quit to Menu</button>
+    <span class="gb-title">Module 02: Social Engineering</span>
+    <span class="gb-step" id="soc-step">Step 1 of 4</span>
+  </div>
+  <div class="game-body" style="flex:1;display:grid;grid-template-columns:1fr 380px;overflow:hidden;min-height:0">
+    <div class="soc-call-panel">
+      <div class="soc-caller">
+        <div class="soc-caller-icon">&#128100;</div>
+        <div>
+          <div class="soc-caller-name">Bob Mitchell</div>
+          <div class="soc-caller-role">IT Support - DeepCover Agency (Unverified)</div>
+        </div>
+        <div class="soc-call-status">Call Active</div>
+      </div>
+      <div class="soc-transcript" id="soc-transcript"></div>
+    </div>
+    <div class="soc-options-panel">
+      <div class="soc-options-hd">Your Response</div>
+      <div class="soc-options-body" id="soc-options"></div>
+      <div class="soc-feedback" id="soc-feedback" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD + 2FA GAME -->
+<div id="phase-twofactor" class="phase">
+  <div class="game-bar">
+    <button class="gb-quit" onclick="showHub()">Quit to Menu</button>
+    <span class="gb-title">Module 03: Password &amp; Two-Factor Auth</span>
+    <span class="gb-step" id="tfa-step">Phase 1 of 3</span>
+  </div>
+  <div class="tfa-arena">
+
+    <!-- LEFT: Player decisions -->
+    <div class="tfa-left">
+
+      <!-- Security rating bar -->
+      <div class="tfa-rating-bar">
+        <div class="tfa-rating-label">Account Security Rating</div>
+        <div class="tfa-rating-track"><div class="tfa-rating-fill" id="tfa-rating-fill"></div></div>
+        <div class="tfa-rating-val" id="tfa-rating-val" style="color:var(--danger)">0 / 100</div>
+      </div>
+
+      <!-- Phase A: Password choice -->
+      <div class="tfa-phase active" id="tfa-phase-a">
+        <div class="tfa-phase-num">Phase 1 of 3 - Password Strength</div>
+        <div class="tfa-phase-title">Choose Your Password</div>
+        <div class="tfa-phase-desc">PHANTOM-9 is scanning agent accounts right now. Pick a password for your DeepCover login - then watch the attack terminal on the right to see how it holds up.</div>
+        <div class="tfa-pw-cards">
+          <div class="tfa-pw-card" id="pw-tier-1" onclick="selectPwTier(1)">
+            <div class="tfa-pw-card-tier" style="color:var(--danger)">Weak</div>
+            <div class="tfa-pw-card-pw">password123</div>
+            <div class="tfa-pw-card-time">Estimated crack time: &lt; 1 second</div>
+          </div>
+          <div class="tfa-pw-card" id="pw-tier-2" onclick="selectPwTier(2)">
+            <div class="tfa-pw-card-tier" style="color:var(--warning)">Moderate</div>
+            <div class="tfa-pw-card-pw">Summer2024!</div>
+            <div class="tfa-pw-card-time">Estimated crack time: ~2 days via hybrid attack</div>
+          </div>
+          <div class="tfa-pw-card" id="pw-tier-3" onclick="selectPwTier(3)">
+            <div class="tfa-pw-card-tier" style="color:var(--accent)">Strong</div>
+            <div class="tfa-pw-card-pw">Xk9#mP$vL7@qR2</div>
+            <div class="tfa-pw-card-time">Estimated crack time: centuries</div>
+          </div>
+        </div>
+        <div class="tfa-or-row">
+          <div class="tfa-or-txt">Or type your own:</div>
+          <div class="tfa-pw-custom-wrap">
+            <input class="tfa-pw-custom-in" id="tfa-custom-pw" type="password" placeholder="Custom password..." oninput="onCustomPwInput()" autocomplete="off">
+            <button class="tfa-pw-show-btn" onclick="toggleCustomPw()">Show</button>
+          </div>
+          <div id="tfa-custom-strength" style="display:none">
+            <div class="tfa-cst-bar-track"><div class="tfa-cst-bar-fill" id="tfa-cst-fill"></div></div>
+            <div class="tfa-cst-meta"><span id="tfa-cst-label"></span><span id="tfa-cst-time"></span></div>
+          </div>
+        </div>
+        <button class="tfa-lock-btn" id="tfa-lock-btn" onclick="lockInPassword()" disabled>Lock In Password &amp; Launch Attack &rarr;</button>
+      </div>
+
+      <!-- Phase B: 2FA choice -->
+      <div class="tfa-phase" id="tfa-phase-b">
+        <div class="tfa-phase-num">Phase 2 of 3 - Second Factor</div>
+        <div class="tfa-phase-title">Choose Your 2FA Method</div>
+        <div class="tfa-phase-desc" id="tfa-phase-b-desc">Your password was just leaked in a data breach. PHANTOM-9 now has it. Pick a second layer of defence.</div>
+        <div class="tfa-2fa-cards">
+          <div class="tfa-2fa-card danger-card" onclick="select2FA('none')">
+            <div class="tfa-2fa-card-icon">&#128683;</div>
+            <div class="tfa-2fa-card-body">
+              <div class="tfa-2fa-card-name">No 2FA</div>
+              <div class="tfa-2fa-card-desc">Password only. If PHANTOM-9 has it, there is nothing else stopping them.</div>
+              <div class="tfa-2fa-card-pts">+0 security points</div>
+            </div>
+          </div>
+          <div class="tfa-2fa-card warning-card" onclick="select2FA('sms')">
+            <div class="tfa-2fa-card-icon">&#128241;</div>
+            <div class="tfa-2fa-card-body">
+              <div class="tfa-2fa-card-name">SMS 2FA</div>
+              <div class="tfa-2fa-card-desc">A code is sent to your phone. Stops most attacks, but SIM swapping can bypass it.</div>
+              <div class="tfa-2fa-card-pts">+30 security points</div>
+            </div>
+          </div>
+          <div class="tfa-2fa-card safe-card" onclick="select2FA('app')">
+            <div class="tfa-2fa-card-icon">&#128272;</div>
+            <div class="tfa-2fa-card-body">
+              <div class="tfa-2fa-card-name">Authenticator App</div>
+              <div class="tfa-2fa-card-desc">Time-based codes generated on your device. Never touches the phone network - cannot be intercepted.</div>
+              <div class="tfa-2fa-card-pts">+60 security points</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase C: Result -->
+      <div class="tfa-phase" id="tfa-phase-c">
+        <div class="tfa-phase-num">Phase 3 of 3 - Attack Result</div>
+        <div class="tfa-phase-title" id="tfa-result-title">Analysing...</div>
+        <div class="tfa-result-verdict" id="tfa-result-verdict"></div>
+        <div id="tfa-result-breakdown" style="display:flex;flex-direction:column;gap:.4rem"></div>
+        <div class="tfa-lesson" id="tfa-lesson" style="display:none"></div>
+        <button class="tfa-lock-btn" id="tfa-finish-btn" style="display:none" onclick="completeTFAModule()">Complete Module &rarr;</button>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Terminal -->
+    <div class="tfa-right">
+      <div class="tfa-term-hd">
+        <span>PHANTOM-9 BREACH TERMINAL</span>
+        <span class="tfa-term-status standby" id="tfa-term-status">STANDBY</span>
+      </div>
+      <div class="tfa-terminal" id="tfa-terminal">
+        <div class="term-line dim">// Initializing PHANTOM-9 attack suite v4.7.1...</div>
+        <div class="term-line dim">// Awaiting target configuration...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- OSINT - Instagram Style -->
+<div id="phase-osint" class="phase">
+  <div class="game-bar">
+    <button class="gb-quit" onclick="showHub()">Quit to Menu</button>
+    <span class="gb-title">Module 04: OSINT Awareness</span>
+    <span class="gb-step">Open posts and tap the highlighted text</span>
+  </div>
+  <div class="game-body">
+    <div class="ig-profile-hd">
+      <div class="ig-av-big">AC</div>
+      <div class="ig-profile-info">
+        <div class="ig-username-row">
+          <span class="ig-username">alex_chen_official</span>
+          <span class="ig-public-badge">&#127758; Public</span>
+        </div>
+        <div class="ig-stats-row">
+          <span class="ig-stat"><strong>7</strong> posts</span>
+          <span class="ig-stat"><strong>1,284</strong> followers</span>
+          <span class="ig-stat"><strong>312</strong> following</span>
+        </div>
+        <div class="ig-bio-name">Alex Chen</div>
+        <div class="ig-bio-txt">Software Dev &#128187; | Dog dad &#128021; | Coffee addict &#9749;<br>&#128205; London, UK</div>
+      </div>
+    </div>
+    <div class="ig-warning-banner">&#9888; This is a fully public profile. Open each post and click the underlined text that an attacker could use against this person.</div>
+    <div class="ig-grid-wrap">
+      <div class="ig-grid" id="osint-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OSINT Post Modal -->
+<div class="ig-modal" id="ig-modal">
+  <button class="ig-modal-close" onclick="closeIgModal()">&#10005;</button>
+  <div class="ig-modal-inner">
+    <div class="ig-modal-photo-wrap">
+      <img id="ig-modal-photo" src="" alt="">
+    </div>
+    <div class="ig-modal-side">
+      <div class="ig-modal-side-hd">
+        <div class="ig-modal-av">AC</div>
+        <div>
+          <div class="ig-modal-uname">alex_chen_official</div>
+          <div class="ig-modal-time-txt" id="ig-modal-time"></div>
+        </div>
+      </div>
+      <div class="ig-modal-caption-area">
+        <div class="ig-modal-caption" id="ig-modal-caption"></div>
+        <div class="ig-modal-instr">&#9888; Click the underlined words - these are things an attacker could exploit</div>
+      </div>
+      <div class="ig-modal-ft">
+        <span id="ig-modal-likes"></span>
+        <span id="ig-modal-comments"></span>
+        <span>&#127758; Public post</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OSINT Floating Counter -->
+<div class="osint-counter" id="osint-counter">
+  <div class="osint-counter-hd">PHANTOM-9 collecting data</div>
+  <div class="osint-counter-count" id="osint-counter-count">0</div>
+  <div class="osint-counter-sub" id="osint-counter-sub">of 7 risks found</div>
+  <button class="osint-counter-reveal-btn" id="osint-counter-reveal-btn" onclick="osintReveal()">View Threat Report &rarr;</button>
+</div>
+
+<!-- OSINT Results Overlay -->
+<div class="osint-results-overlay" id="osint-results-overlay">
+  <div class="osint-results-inner">
+    <div class="osint-results-hero">
+      <div class="osint-results-icon">&#128373;</div>
+      <div class="osint-results-title">OSINT Threat Assessment</div>
+      <div class="osint-results-sub">PHANTOM-9 analysis complete</div>
+      <div class="osint-results-fraction" id="osint-results-fraction"></div>
+      <div class="osint-results-sub" id="osint-results-score-lbl"></div>
+    </div>
+    <div class="osint-vuln-list" id="osint-vuln-list"></div>
+    <div class="osint-results-lesson">
+      <strong>How to protect yourself:</strong> Set your social profiles to private and audit what you post publicly. Never use real answers for security questions - generate random answers and store them in a password manager. Think before naming pets, family members, or locations in any public caption or bio.
+    </div>
+    <div class="osint-results-finish">
+      <button class="btn-primary" id="osint-complete-btn">Complete Module &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="phase-result" class="phase">
+  <div class="bg-grid"></div>
+  <div class="result-wrap">
+    <div class="result-mod-name" id="result-mod-name"></div>
+    <div class="result-score-big" id="result-score-big" style="color:var(--accent)"></div>
+    <div class="result-score-sub">out of 100</div>
+    <div class="result-lesson-card">
+      <div class="result-lesson-lbl">Key Takeaway</div>
+      <div class="result-lesson-txt" id="result-lesson-txt"></div>
+    </div>
+    <div class="result-btns">
+      <button class="btn-sec" onclick="showHub()">Back to Hub</button>
+      <button class="btn-primary" id="result-next-btn">Next Module &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERALL -->
+<div id="phase-overall" class="phase">
+  <div class="bg-grid"></div>
+  <div class="overall-wrap" style="position:relative;z-index:2">
+    <div class="overall-title">Mission Complete</div>
+    <div class="overall-sub">Cyber Defense Training - Final Assessment</div>
+    <div class="overall-scores" id="overall-scores"></div>
+    <div class="overall-total" id="overall-total"></div>
+    <div class="overall-grade-lbl" id="overall-grade-lbl"></div>
+    <div style="display:flex;gap:.75rem;justify-content:center">
+      <button class="btn-sec" onclick="showHub()">Return to Hub</button>
+      <button class="btn-primary" onclick="window.location.href='../index.html'">&larr; Return to Base</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* NAVIGATION */
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase-' + id).classList.add('active');
+}
+function showHub() { updateHub(); showPhase('hub'); document.getElementById('osint-counter').className='osint-counter'; document.getElementById('osint-results-overlay').className='osint-results-overlay'; }
+
+const MODULE_ORDER = ['phishing','social','twofactor','osint'];
+let SCORES = { phishing:null, social:null, twofactor:null, osint:null };
+
+function startModule(name) {
+  if (name !== 'osint') { document.getElementById('osint-counter').className='osint-counter'; document.getElementById('osint-results-overlay').className='osint-results-overlay'; }
+  showPhase(name);
+  if (name === 'phishing')  initPhishing();
+  if (name === 'social')    initSocial();
+  if (name === 'twofactor') initTFA();
+  if (name === 'osint')     initOSINT();
+}
+
+function updateHub() {
+  let done = 0;
+  MODULE_ORDER.forEach(m => {
+    const card = document.getElementById('mod-' + m);
+    const badge = document.getElementById('score-' + m);
+    if (SCORES[m] !== null) {
+      done++;
+      card.classList.add('done');
+      badge.style.display = 'block';
+      badge.textContent = SCORES[m] + '/100';
+    }
+  });
+  document.getElementById('hub-progress').textContent = done + ' / 4 complete';
+}
+
+function completeModule(name, score, lesson) {
+  SCORES[name] = score;
+  const NAMES = { phishing:'Phishing Detection', social:'Social Engineering', twofactor:'Password & Two-Factor Auth', osint:'OSINT Awareness' };
+  const NEXT  = { phishing:'social', social:'twofactor', twofactor:'osint', osint:null };
+  document.getElementById('result-mod-name').textContent = 'Module Complete: ' + NAMES[name];
+  const scoreEl = document.getElementById('result-score-big');
+  scoreEl.textContent = score;
+  scoreEl.style.color = score >= 80 ? 'var(--accent)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
+  document.getElementById('result-lesson-txt').textContent = lesson;
+  const nextBtn = document.getElementById('result-next-btn');
+  const nextMod = NEXT[name];
+  if (nextMod) {
+    nextBtn.textContent = 'Next Module: ' + NAMES[nextMod] + ' \u2192';
+    nextBtn.onclick = () => startModule(nextMod);
+  } else {
+    nextBtn.textContent = 'View Final Results \u2192';
+    nextBtn.onclick = showOverall;
+  }
+  showPhase('result');
+  updateHub();
+}
+
+function showOverall() {
+  const NAMES = { phishing:'Phishing Detection', social:'Social Engineering', twofactor:'Password & 2FA', osint:'OSINT Awareness' };
+  const rows = document.getElementById('overall-scores');
+  rows.innerHTML = '';
+  let total = 0, count = 0;
+  MODULE_ORDER.forEach(m => {
+    const s = SCORES[m] ?? 0;
+    if (SCORES[m] !== null) { total += s; count++; }
+    rows.innerHTML += `<div class="ov-row">
+      <span class="ov-name">${NAMES[m]}</span>
+      <div class="ov-bar"><div class="ov-bar-fill" style="width:${s}%;background:${s>=80?'var(--accent)':s>=50?'var(--warning)':'var(--danger)'}"></div></div>
+      <span class="ov-score" style="color:${s>=80?'var(--accent)':s>=50?'var(--warning)':'var(--danger)'}">${SCORES[m]!==null?s:'-'}</span>
+    </div>`;
+  });
+  const avg = count ? Math.round(total / count) : 0;
+  document.getElementById('overall-total').textContent = avg + '/100';
+  const grade = avg >= 90 ? 'S' : avg >= 75 ? 'A' : avg >= 55 ? 'B' : avg >= 35 ? 'C' : 'F';
+  const msgs = { S:'Elite - Outstanding security awareness.', A:'Strong - Well-trained defender.', B:'Competent - Some gaps remain.', C:'Developing - Review the modules again.', F:'At Risk - Significant vulnerabilities identified.' };
+  document.getElementById('overall-grade-lbl').textContent = 'Grade ' + grade + ' - ' + msgs[grade];
+  showPhase('overall');
+  setTimeout(() => document.querySelectorAll('.ov-bar-fill').forEach(b => b.style.transition = 'width 1s ease'), 100);
+}
+
+/* MODULE 01: PHISHING */
+const EMAILS = [
+  { id:1, isPhishing:false, from:'james.chen@deepcover-agency.gov', fromDisplay:'James Chen', subject:'Re: Thursday budget review', time:'10:42 AM',
+    body:'Hey,\n\nJust confirming the budget review is still on for Thursday at 2pm in Conference Room B. I\'ll bring the Q3 reports.\n\nLet me know if you need to reschedule.\n\nBest,\nJames', link:null, attachment:null,
+    annotations:[
+      {type:'safe',text:'Legitimate agency domain: @deepcover-agency.gov'},
+      {type:'safe',text:'No links, no attachments, no request for action'},
+      {type:'safe',text:'Casual and contextual - no manufactured urgency'},
+    ]},
+  { id:2, isPhishing:true, from:'security@chase-account-alerts.net', fromDisplay:'Chase Security Team', subject:'URGENT: Your account has been suspended', time:'11:15 AM',
+    body:'Dear Valued Customer,\n\nWe have detected suspicious activity on your Chase account. To avoid permanent suspension, you must verify your identity within 24 HOURS.\n\nFailure to act will result in immediate account termination and loss of access to your funds.', link:'Verify My Account Now \u2192', attachment:null,
+    annotations:[
+      {type:'danger',text:'Fake domain: @chase-account-alerts.net (real Chase uses @chase.com)'},
+      {type:'danger',text:'Artificial urgency: "24 HOURS" and "permanent suspension" designed to cause panic'},
+      {type:'danger',text:'Generic greeting: "Dear Valued Customer" - real banks address you by name'},
+      {type:'danger',text:'Threatening language designed to bypass rational thinking'},
+    ]},
+  { id:3, isPhishing:true, from:'it-support@deepcover-agency.gov.security-patch.net', fromDisplay:'IT Support - DeepCover Agency', subject:'Mandatory Security Update - Action Required', time:'1:03 PM',
+    body:'All staff,\n\nAs part of our Q1 security initiative (Policy 2025-SEC-04), all employees must install the attached endpoint patch before 5PM today.\n\nNon-compliant systems will be automatically quarantined.\n\nIT Security Team\nDeepCover Agency', link:null, attachment:'SecurityPatch_Q1_2025.exe',
+    annotations:[
+      {type:'danger',text:'Spoofed domain: @deepcover-agency.gov.security-patch.net - the real domain ends at .gov'},
+      {type:'danger',text:'Executable attachment: .exe files sent via email are almost always malware'},
+      {type:'danger',text:'Tight deadline creates panic: "before 5PM today"'},
+      {type:'warning',text:'Policy numbers sound official but are fabricated to add false credibility'},
+    ]},
+  { id:4, isPhishing:false, from:'noreply@zoom.us', fromDisplay:'Zoom', subject:'Your Zoom subscription renews in 7 days', time:'2:17 PM',
+    body:'Hi Alex,\n\nYour Zoom Pro subscription renews on April 25, 2025 for $149.90/year.\n\nTo manage your subscription, sign in at zoom.us/account. Do not reply to this email.\n\nZoom Communications', link:null, attachment:null,
+    annotations:[
+      {type:'safe',text:'Legitimate domain: @zoom.us - this is the real Zoom sender domain'},
+      {type:'safe',text:'No urgent action required - purely informational'},
+      {type:'safe',text:'Directs you to type the URL yourself rather than clicking a link'},
+      {type:'warning',text:'Tricky: looks like it could be phishing - but the domain and content check out'},
+    ]},
+  { id:5, isPhishing:true, from:'d.morgan@deepcover-agency.gov.net', fromDisplay:'Director Morgan', subject:'Urgent - Confidential Transfer Needed', time:'4:51 PM',
+    body:'I need your help immediately. I\'m in a classified briefing and cannot take calls.\n\nI need you to process an emergency vendor payment of $18,500. Do not discuss this with anyone - it is classified and time-sensitive. I will explain fully when I am out.\n\nAct now.\n\n- Director Morgan', link:null, attachment:null,
+    annotations:[
+      {type:'danger',text:'Fake domain: @deepcover-agency.gov.net - the real domain ends at .gov, not .gov.net'},
+      {type:'danger',text:'CEO/BEC fraud: impersonating senior staff to authorise payments'},
+      {type:'danger',text:'"Do not discuss with anyone" - real emergencies always go through proper official channels'},
+      {type:'danger',text:'Urgency plus secrecy is the defining hallmark of business email compromise'},
+    ]},
+];
+
+let phTags = {}, phCurrent = null, phRevealed = false;
+
+function initPhishing() {
+  phTags = {}; phCurrent = null; phRevealed = false;
+  document.getElementById('ph-step').textContent = 'Tag all 5 emails, then reveal';
+  renderEmailList();
+  document.getElementById('ph-viewer').innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-family:var(--mono);font-size:.6rem">Select an email to read</div>';
+}
+
+function renderEmailList() {
+  const list = document.getElementById('ph-email-list');
+  list.innerHTML = '';
+  EMAILS.forEach(e => {
+    const tagged = phTags[e.id];
+    const active = phCurrent === e.id ? ' active' : '';
+    const tagClass = tagged ? (tagged === 'real' ? ' tagged-real' : ' tagged-phish') : '';
+    list.innerHTML += `<div class="ph-item${active}${tagClass}" onclick="viewEmail(${e.id})">
+      <div class="ph-sender">${e.fromDisplay}</div>
+      <div class="ph-subject">${e.subject}</div>
+      <div class="ph-time">${e.time}</div>
+      ${tagged ? `<div class="ph-tag ${tagged}">${tagged === 'real' ? 'Real' : 'Phishing'}</div>` : ''}
+    </div>`;
+  });
+}
+
+function viewEmail(id) {
+  phCurrent = id;
+  const e = EMAILS.find(x => x.id === id);
+  const tagged = phTags[id];
+  renderEmailList();
+  const viewer = document.getElementById('ph-viewer');
+  const allTagged = EMAILS.every(x => phTags[x.id]);
+  viewer.innerHTML = `
+    <div class="ph-email-hd">
+      <div class="ph-email-subject">${e.subject}</div>
+      <div class="ph-email-from">From: <span>${e.fromDisplay}</span> &lt;${e.from}&gt;</div>
+    </div>
+    <div class="ph-email-body">
+      <div class="ph-body-txt">${e.body.replace(/</g,'&lt;')}</div>
+      ${e.link ? `<div class="ph-link">&#128279; ${e.link}</div>` : ''}
+      ${e.attachment ? `<div class="ph-attachment">&#128206; ${e.attachment}</div>` : ''}
+    </div>
+    <div class="ph-actions">
+      <span class="ph-action-lbl">Tag this email:</span>
+      <button class="btn-real${tagged==='real'?' selected':''}" onclick="tagEmail(${id},'real')">&#10003; Looks Real</button>
+      <button class="btn-phish${tagged==='phish'?' selected':''}" onclick="tagEmail(${id},'phish')">&#9888; Phishing</button>
+      ${allTagged && !phRevealed ? '<button class="ph-reveal-btn" onclick="revealPhishing()">Reveal Answers &rarr;</button>' : ''}
+    </div>`;
+}
+
+function tagEmail(id, tag) {
+  phTags[id] = tag;
+  renderEmailList();
+  viewEmail(id);
+  document.getElementById('ph-step').textContent = Object.keys(phTags).length + ' of 5 tagged';
+}
+
+function revealPhishing() {
+  phRevealed = true;
+  let correct = 0;
+  EMAILS.forEach(e => {
+    if ((phTags[e.id]==='real'&&!e.isPhishing)||(phTags[e.id]==='phish'&&e.isPhishing)) correct++;
+  });
+  const score = Math.round(correct / 5 * 100);
+  const fraction = document.getElementById('ph-outcomes-fraction');
+  fraction.textContent = correct + ' / 5';
+  fraction.style.color = correct >= 4 ? 'var(--accent)' : correct >= 3 ? 'var(--warning)' : 'var(--danger)';
+  const list = document.getElementById('ph-outcomes-list');
+  list.innerHTML = '';
+  EMAILS.forEach((e, i) => {
+    const userTag = phTags[e.id];
+    const isCorrect = (userTag==='real'&&!e.isPhishing)||(userTag==='phish'&&e.isPhishing);
+    list.innerHTML += `<div class="outcome-card" style="animation-delay:${i * .07}s">
+      <div class="outcome-hd">
+        <div class="outcome-email-info">
+          <div class="outcome-subject">${e.subject}</div>
+          <div class="outcome-from">${e.from}</div>
+        </div>
+        <div class="outcome-verdict ${isCorrect?'correct':'wrong'}">${isCorrect ? '&#10003; Correct' : '&#10007; Wrong'}</div>
+      </div>
+      <div class="outcome-body">
+        <div class="outcome-player-tag">You said: ${userTag==='real'?'Legitimate email':'Phishing email'} &nbsp;|&nbsp; Answer: ${e.isPhishing?'This IS a phishing email':'This is a legitimate email'}</div>
+        ${e.annotations.map(a => `<div class="ph-ann ${a.type}">${a.text}</div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('ph-complete-btn').onclick = () => completeModule('phishing', score, 'Always check the actual sender domain - not just the display name. Real urgent messages from banks or IT are resolved by navigating to the official site yourself, never by clicking links in the email.');
+  showPhase('phishing-outcomes');
+}
+
+/* MODULE 02: SOCIAL ENGINEERING */
+const SOC_STEPS = [
+  { msg: 'Hi there, this is Bob from IT Support. We\'ve detected some unusual login activity on your account and I need to run a quick security check. Do you have a minute?',
+    opts: [
+      { text: 'Sure, what do you need?', outcome:'warning', label:'Risky', score:10, fb:'You accepted without verifying who Bob is. Real IT support can always be reached through official channels - always verify the caller before sharing anything.' },
+      { text: 'Can I get your employee ID and ticket number first?', outcome:'neutral', label:'Cautious', score:25, fb:'Good instinct to ask for verification. However, attackers can fabricate these easily. The safest move is to hang up and call IT yourself using the number on the official intranet.' },
+      { text: 'I\'ll hang up and call IT directly at the official number.', outcome:'good', label:'Best Answer', score:40, fb:'Perfect. This is always the correct response to unsolicited calls. You verify the caller by using a number YOU looked up - not one they gave you.' },
+    ]},
+  { msg: 'I\'ve pulled up your account. I just need to confirm your username so I can access the login log. What do you use to sign in?',
+    opts: [
+      { text: 'It\'s alex.morgan@deepcover-agency.gov', outcome:'warning', label:'Risky', score:10, fb:'Usernames seem harmless but they complete the first half of your credentials. Legitimate IT already has this information - asking you to confirm it is a social engineering technique called pretexting.' },
+      { text: 'IT should already have that information. Why do you need me to confirm it?', outcome:'good', label:'Best Answer', score:30, fb:'Exactly right. Legitimate support already has access to your account details. Asking you to "confirm" information is a classic pretexting tactic.' },
+    ]},
+  { msg: 'Right. And I\'ll need your current password to run the account diagnostic. Don\'t worry - our system is encrypted and it won\'t be stored anywhere.',
+    opts: [
+      { text: 'OK, it\'s Hunter2025!', outcome:'bad', label:'Critical Error', score:0, fb:'Never share your password with anyone - ever. IT support does not need your password to help you. This is the single most common social engineering trap.' },
+      { text: 'IT never needs my password. I\'m ending this call right now.', outcome:'good', label:'Best Answer', score:20, fb:'Correct. No legitimate IT person will ever ask for your password. This is a universal security rule. Ending the call and reporting it is exactly right.' },
+      { text: 'I\'m not comfortable with that - can you reset it instead?', outcome:'neutral', label:'Cautious', score:10, fb:'Good instinct to refuse. But you\'re still engaging with a potential attacker. The right move is to end the call immediately and report it to your real IT department.' },
+    ]},
+  { msg: 'No problem. Let me send you a reset link to do it yourself: http://deepcover-secure-portal.net/reset - just click that and follow the steps.',
+    opts: [
+      { text: 'Thanks, I\'ll click that now.', outcome:'bad', label:'Critical Error', score:0, fb:'This is a phishing link. "deepcover-secure-portal.net" is not your agency domain. Never click links given to you by a caller - always navigate to official sites yourself.' },
+      { text: 'I don\'t click links from calls. I\'ll go to the official portal myself.', outcome:'good', label:'Best Answer', score:10, fb:'Perfect. Always navigate to official sites yourself by typing a URL you already know. Never follow links provided by an unsolicited caller.' },
+    ]},
+];
+
+let socStep = 0, socScore = 0, socAnswered = false;
+
+function initSocial() {
+  socStep = 0; socScore = 0; socAnswered = false;
+  document.getElementById('soc-transcript').innerHTML = '';
+  document.getElementById('soc-feedback').style.display = 'none';
+  document.getElementById('soc-step').textContent = 'Step 1 of 4';
+  renderSocStep();
+}
+
+function addSocMsg(text, type) {
+  const t = document.getElementById('soc-transcript');
+  const isYou = type === 'good' || type === 'warning' || type === 'bad';
+  t.innerHTML += `<div class="soc-msg ${isYou?'you':'them'}">
+    <div class="soc-av ${isYou?'you':'them'}">${isYou?'YOU':'B'}</div>
+    <div class="soc-bubble ${isYou?'you '+type:'them'}">${text}</div>
+  </div>`;
+  t.scrollTop = t.scrollHeight;
+}
+
+function renderSocStep() {
+  if (socStep >= SOC_STEPS.length) return;
+  const step = SOC_STEPS[socStep];
+  setTimeout(() => addSocMsg(step.msg, ''), 300);
+  const opts = document.getElementById('soc-options');
+  opts.innerHTML = '';
+  step.opts.forEach((o, i) => {
+    opts.innerHTML += `<div class="soc-opt" onclick="chooseSocOpt(${i})">
+      <div class="soc-opt-text">${o.text}</div>
+      <div class="soc-opt-hint">${o.label}</div>
+    </div>`;
+  });
+  document.getElementById('soc-feedback').style.display = 'none';
+  socAnswered = false;
+}
+
+function chooseSocOpt(idx) {
+  if (socAnswered) return;
+  socAnswered = true;
+  const step = SOC_STEPS[socStep];
+  const opt = step.opts[idx];
+  socScore += opt.score;
+  addSocMsg(opt.text, opt.outcome);
+  document.querySelectorAll('.soc-opt').forEach(o => o.style.opacity = '.4');
+  const fb = document.getElementById('soc-feedback');
+  fb.style.display = 'block';
+  fb.className = 'soc-feedback ' + opt.outcome;
+  fb.innerHTML = `<div class="soc-fb-label ${opt.outcome}">${opt.label}</div>${opt.fb}`;
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'soc-next-btn show';
+  socStep++;
+  if (socStep < SOC_STEPS.length) {
+    nextBtn.textContent = 'Next \u2192';
+    nextBtn.onclick = () => { fb.querySelector('.soc-next-btn').remove(); document.getElementById('soc-step').textContent = `Step ${socStep+1} of 4`; renderSocStep(); };
+  } else {
+    const finalScore = Math.round(socScore);
+    nextBtn.textContent = `Complete Module (${finalScore}/100) \u2192`;
+    nextBtn.onclick = () => completeModule('social', finalScore, 'Legitimate IT support will never ask for your password and will never give you links over the phone. The single best response to any unsolicited call requesting account access is to hang up and call back using an official number you looked up yourself.');
+  }
+  fb.appendChild(nextBtn);
+}
+
+/* MODULE 03: PASSWORD + 2FA GAME */
+let tfaGame = { pwScore:0, tfaScore:0, pwTier:null, customPw:null, showPw:false, locked:false };
+
+function initTFA() {
+  tfaGame = { pwScore:0, tfaScore:0, pwTier:null, customPw:null, showPw:false, locked:false };
+  document.querySelectorAll('.tfa-phase').forEach((p,i) => {
+    p.className = 'tfa-phase' + (i===0?' active':'');
+  });
+  document.querySelectorAll('.tfa-pw-card').forEach(c => { c.classList.remove('selected'); c.style.pointerEvents=''; c.style.opacity=''; });
+  document.querySelectorAll('.tfa-2fa-card').forEach(c => { c.style.pointerEvents=''; c.style.opacity=''; });
+  const ci = document.getElementById('tfa-custom-pw');
+  if (ci) { ci.value=''; ci.type='password'; ci.disabled=false; }
+  document.getElementById('tfa-custom-strength').style.display='none';
+  document.getElementById('tfa-lock-btn').disabled=true;
+  document.getElementById('tfa-finish-btn').style.display='none';
+  document.getElementById('tfa-lesson').style.display='none';
+  document.getElementById('tfa-result-breakdown').innerHTML='';
+  document.querySelector('.tfa-pw-show-btn').textContent='Show';
+  document.getElementById('tfa-terminal').innerHTML='<div class="term-line dim">// Initializing PHANTOM-9 attack suite v4.7.1...</div><div class="term-line dim">// Awaiting target configuration...</div>';
+  setTermStatus('standby','STANDBY');
+  setRating(0);
+  document.getElementById('tfa-step').textContent='Phase 1 of 3';
+}
+
+function setRating(score) {
+  const fill = document.getElementById('tfa-rating-fill');
+  const val  = document.getElementById('tfa-rating-val');
+  const col  = score>=70?'var(--accent)':score>=40?'var(--warning)':'var(--danger)';
+  fill.style.width = score+'%';
+  fill.style.background = col;
+  val.textContent = score+' / 100';
+  val.style.color = col;
+}
+
+function setTermStatus(cls, txt) {
+  const el = document.getElementById('tfa-term-status');
+  el.className = 'tfa-term-status '+cls;
+  el.textContent = txt;
+}
+
+function selectPwTier(tier) {
+  if (tfaGame.locked) return;
+  tfaGame.pwTier = tier;
+  tfaGame.customPw = null;
+  document.querySelectorAll('.tfa-pw-card').forEach((c,i) => c.classList.toggle('selected', i+1===tier));
+  const ci = document.getElementById('tfa-custom-pw');
+  if (ci) { ci.value=''; }
+  document.getElementById('tfa-custom-strength').style.display='none';
+  document.getElementById('tfa-lock-btn').disabled=false;
+  const previews = {
+    1:[ ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Loading 10M common password list...'], ['warn','[!] Testing dictionary...'], ['hit','[HIT] password123 found in top-100 list'], ['hit','[!] Crack time estimate: <1 second'] ],
+    2:[ ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Dictionary: 0 matches'], ['warn','[!] Running hybrid mutations (word+year+symbol)...'], ['warn','[!] Testing Summer2024! pattern...'], ['warn','[!] Crack time estimate: ~2 days'] ],
+    3:[ ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Dictionary: 0 matches. Hybrid: 0 matches.'], ['ok','[OK] Brute force required: 400+ years at 10B guesses/sec'], ['ok','[ABORT] Not feasible to crack'], ['ok','[SECURE] Password is strong'] ],
+  };
+  const term = document.getElementById('tfa-terminal');
+  term.innerHTML='';
+  (previews[tier]||[]).forEach(([cls,txt],i) => {
+    setTimeout(()=>{ const d=document.createElement('div'); d.className='term-line '+cls; d.textContent=txt; term.appendChild(d); term.scrollTop=term.scrollHeight; }, i*180);
+  });
+}
+
+function toggleCustomPw() {
+  tfaGame.showPw = !tfaGame.showPw;
+  document.getElementById('tfa-custom-pw').type = tfaGame.showPw?'text':'password';
+  document.querySelector('.tfa-pw-show-btn').textContent = tfaGame.showPw?'Hide':'Show';
+}
+
+function calcStrength(pwd) {
+  if (!pwd) return { label:'-', time:'-', score:0, pct:0, color:'var(--border2)' };
+  let cs=0;
+  if (/[a-z]/.test(pwd)) cs+=26;
+  if (/[A-Z]/.test(pwd)) cs+=26;
+  if (/[0-9]/.test(pwd)) cs+=10;
+  if (/[^a-zA-Z0-9]/.test(pwd)) cs+=32;
+  const combos=Math.pow(cs||10,pwd.length), secs=combos/1e10/2;
+  if (secs<1)     return { label:'VERY WEAK',   time:'< 1 second',                score:0,  pct:10,  color:'var(--danger)' };
+  if (secs<3600)  return { label:'WEAK',        time:Math.ceil(secs/60)+' min',    score:10, pct:25,  color:'var(--danger)' };
+  if (secs<86400) return { label:'MODERATE',    time:Math.ceil(secs/3600)+' hr',   score:20, pct:45,  color:'var(--warning)' };
+  if (secs<2.6e6) return { label:'GOOD',        time:Math.ceil(secs/86400)+' days',score:30, pct:65,  color:'var(--warning)' };
+  if (secs<3.15e9)return { label:'STRONG',      time:Math.ceil(secs/3.15e7)+' yr', score:40, pct:85,  color:'var(--accent)' };
+  return               { label:'VERY STRONG',  time:'centuries',                   score:40, pct:100, color:'var(--accent)' };
+}
+
+function onCustomPwInput() {
+  const pwd = document.getElementById('tfa-custom-pw').value;
+  if (pwd.length>0) {
+    document.querySelectorAll('.tfa-pw-card').forEach(c=>c.classList.remove('selected'));
+    tfaGame.pwTier=null; tfaGame.customPw=pwd;
+  } else { tfaGame.customPw=null; }
+  document.getElementById('tfa-lock-btn').disabled = !(pwd.length>0 || tfaGame.pwTier);
+  if (!pwd) { document.getElementById('tfa-custom-strength').style.display='none'; return; }
+  document.getElementById('tfa-custom-strength').style.display='block';
+  const str=calcStrength(pwd);
+  const fill=document.getElementById('tfa-cst-fill');
+  fill.style.width=str.pct+'%'; fill.style.background=str.color;
+  document.getElementById('tfa-cst-label').textContent=str.label;
+  document.getElementById('tfa-cst-label').style.color=str.color;
+  document.getElementById('tfa-cst-time').textContent='Crack: '+str.time;
+}
+
+async function addTermLine(cls, txt, delay=320) {
+  await new Promise(r=>setTimeout(r,delay));
+  const term=document.getElementById('tfa-terminal');
+  const d=document.createElement('div'); d.className='term-line '+cls; d.textContent=txt;
+  term.appendChild(d); term.scrollTop=term.scrollHeight;
+}
+
+async function lockInPassword() {
+  tfaGame.locked=true;
+  document.getElementById('tfa-lock-btn').disabled=true;
+  document.querySelectorAll('.tfa-pw-card').forEach(c=>{ c.style.pointerEvents='none'; });
+  document.getElementById('tfa-custom-pw').disabled=true;
+  setTermStatus('active','ATTACKING');
+  document.getElementById('tfa-step').textContent='Phase 1 - Attack Running';
+  document.getElementById('tfa-terminal').innerHTML='';
+
+  let pwScore, attackLines;
+  const tier=tfaGame.pwTier, custom=tfaGame.customPw;
+
+  if (tier===1) {
+    pwScore=5;
+    attackLines=[ ['sys','[PHANTOM-9] Breach Protocol initialized'], ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Loading credential database (847M entries)...'], ['warn','[!] Checking top-10K common passwords...'], ['dim','[*] Testing: password... MISS'], ['dim','[*] Testing: password1... MISS'], ['hit','[HIT] password123 found in database'], ['hit','[BREACH] Password cracked in 0.003 seconds'], ['hit','[!!!] Account access obtained'] ];
+  } else if (tier===2) {
+    pwScore=20;
+    attackLines=[ ['sys','[PHANTOM-9] Breach Protocol initialized'], ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Dictionary attack: 0 matches'], ['warn','[!] Running hybrid mutation engine...'], ['dim','[*] Testing Summer+2023+! ... MISS'], ['dim','[*] Testing Summer+2024+! ...'], ['hit','[HIT] Summer2024! cracked via hybrid attack'], ['hit','[BREACH] Estimated real-world time: ~2 days'], ['hit','[!!!] Credential confirmed'] ];
+  } else if (tier===3) {
+    pwScore=40;
+    attackLines=[ ['sys','[PHANTOM-9] Breach Protocol initialized'], ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Dictionary attack: 0 matches'], ['dim','[*] Hybrid attack: 0 matches'], ['warn','[!] Switching to brute force (10B guesses/sec)...'], ['dim','[*] Estimated completion: 400+ years'], ['ok','[ABORT] Attack not feasible'], ['ok','[SECURE] Password is cryptographically strong'], ['ok','[RESULT] Brute force failed - password holds'] ];
+  } else {
+    const str=calcStrength(custom||'');
+    pwScore=str.score;
+    const cracked=str.score<30;
+    attackLines=[ ['sys','[PHANTOM-9] Analyzing custom password...'], ['dim','[*] Target: alex.morgan@deepcover.gov'], ['dim','[*] Entropy check: '+str.label], [cracked?'warn':'ok','[*] Estimated crack time: '+str.time], cracked?['hit','[BREACH] Password compromised']:['ok','[SECURE] Password held against attack'] ];
+  }
+
+  for (const [cls,txt] of attackLines) await addTermLine(cls,txt,310);
+  tfaGame.pwScore=pwScore;
+  setRating(pwScore);
+  setTermStatus(pwScore>=30?'done-ok':'done-fail', pwScore>=30?'REPELLED':'BREACHED');
+  await new Promise(r=>setTimeout(r,500));
+
+  document.getElementById('tfa-phase-a').className='tfa-phase';
+  document.getElementById('tfa-phase-b').className='tfa-phase active';
+  document.getElementById('tfa-step').textContent='Phase 2 of 3';
+  document.getElementById('tfa-phase-b-desc').textContent = pwScore>=30
+    ? 'Even a strong password can be leaked in a data breach at another service. PHANTOM-9 now has your credentials. Add a second layer.'
+    : 'Your password was just cracked. PHANTOM-9 has your credentials. Choose a second layer to try to stop them.';
+  await addTermLine('warn','[!] Credential confirmed. Attempting account login...',400);
+}
+
+async function select2FA(choice) {
+  document.querySelectorAll('.tfa-2fa-card').forEach(c=>{ c.style.pointerEvents='none'; c.style.opacity='.4'; });
+  tfaGame.tfaScore = { none:0, sms:30, app:60 }[choice];
+  const total = Math.min(100, tfaGame.pwScore+tfaGame.tfaScore);
+  setRating(total);
+  document.getElementById('tfa-step').textContent='Phase 3 of 3 - Final Attack';
+  setTermStatus('active','ATTACKING');
+
+  let result, lines;
+  if (choice==='none') {
+    result='breached';
+    lines=[ ['sys','[PHANTOM-9] Attempting login with harvested credentials...'], ['dim','[*] Username: alex.morgan@deepcover.gov'], ['dim','[*] Password: [confirmed]'], ['dim','[*] 2FA check: NONE DETECTED'], ['hit','[BREACH] No second factor - direct access granted'], ['hit','[BREACH] Full account compromised'], ['hit','[!!!] PHANTOM-9 inside your account'] ];
+  } else if (choice==='sms') {
+    result='partial';
+    lines=[ ['sys','[PHANTOM-9] SMS 2FA detected. Initiating SIM swap...'], ['dim','[*] Calling carrier impersonation module...'], ['dim','[*] Social engineering carrier support agent...'], ['warn','[!] SIM transfer request submitted'], ['warn','[!] Carrier approved: number transferred to PHANTOM-9 SIM'], ['dim','[*] Waiting for SMS code on new SIM...'], ['hit','[BREACH] Code received: 847 291'], ['hit','[BREACH] Login successful via SMS intercept'], ['hit','[RESULT] SMS 2FA bypassed by SIM swap attack'] ];
+  } else {
+    result='secured';
+    lines=[ ['sys','[PHANTOM-9] Authenticator app 2FA detected...'], ['dim','[*] SIM swap: FAILED - no SMS to intercept'], ['dim','[*] Real-time phishing attempt: FAILED'], ['ok','[OK] Code generated locally on target device'], ['ok','[OK] No phone carrier involvement - uninterceptable'], ['ok','[OK] Code rotates every 30 seconds'], ['ok','[ABORT] All attack vectors exhausted'], ['ok','[DENIED] LOGIN BLOCKED'], ['ok','[!!!] Account PROTECTED - PHANTOM-9 repelled'] ];
+  }
+
+  for (const [cls,txt] of lines) await addTermLine(cls,txt,370);
+  setTermStatus(result==='secured'?'done-ok':'done-fail', result==='secured'?'REPELLED':'BREACHED');
+  await new Promise(r=>setTimeout(r,500));
+
+  document.getElementById('tfa-phase-b').className='tfa-phase';
+  document.getElementById('tfa-phase-c').className='tfa-phase active';
+  document.getElementById('tfa-step').textContent='Phase 3 of 3 - Complete';
+
+  const verdicts={ breached:'ACCOUNT BREACHED', partial:'PARTIALLY PROTECTED', secured:'ATTACK REPELLED' };
+  const titleTxt={ breached:'PHANTOM-9 is inside.', partial:'SMS 2FA was bypassed.', secured:'Your defences held.' };
+  document.getElementById('tfa-result-verdict').textContent=verdicts[result];
+  document.getElementById('tfa-result-verdict').className='tfa-result-verdict '+result;
+  document.getElementById('tfa-result-title').textContent=titleTxt[result];
+
+  const pwLabelMap=['','Very Weak','Moderate','Strong','Custom'];
+  const pwLbl = tfaGame.pwTier ? pwLabelMap[tfaGame.pwTier] : (calcStrength(tfaGame.customPw||'').label||'Custom');
+  const tfaLbl={ none:'No 2FA', sms:'SMS 2FA', app:'Authenticator App' }[choice];
+  const pwCol = tfaGame.pwScore>=30?'var(--accent)':tfaGame.pwScore>=15?'var(--warning)':'var(--danger)';
+  const tfaCol = tfaGame.tfaScore>=50?'var(--accent)':tfaGame.tfaScore>0?'var(--warning)':'var(--danger)';
+  const totCol = total>=70?'var(--accent)':total>=40?'var(--warning)':'var(--danger)';
+  document.getElementById('tfa-result-breakdown').innerHTML=`
+    <div class="tfa-score-row"><span>Password (${pwLbl})</span><span style="color:${pwCol}">+${tfaGame.pwScore} pts</span></div>
+    <div class="tfa-score-row"><span>2FA Method (${tfaLbl})</span><span style="color:${tfaCol}">+${tfaGame.tfaScore} pts</span></div>
+    <div class="tfa-score-row" style="border-top:1px solid var(--border2)"><strong>Total Security Score</strong><strong style="color:${totCol};font-size:.7rem">${total} / 100</strong></div>`;
+
+  const lessons={ breached:'A single password is a single point of failure. Use a password manager to generate unique passwords for every account, and always add 2FA. One leaked password should never be enough to take over your account.', partial:'SMS 2FA is far better than nothing and stops the vast majority of attacks. But SIM swapping is a real threat. Wherever possible, switch to an authenticator app for phishing-resistant, network-independent protection.', secured:'This is the gold standard: a strong unique password combined with an authenticator app. Even with your credentials leaked, PHANTOM-9 cannot get in. Enable an authenticator app on every account that supports it.' };
+  const lessonEl=document.getElementById('tfa-lesson');
+  lessonEl.innerHTML='<strong>Key takeaway:</strong> '+lessons[result];
+  lessonEl.style.display='block';
+  document.getElementById('tfa-finish-btn').style.display='block';
+}
+
+function completeTFAModule() {
+  const total=Math.min(100,tfaGame.pwScore+tfaGame.tfaScore);
+  completeModule('twofactor',total,'Use a password manager for unique, strong passwords on every account. Then enable an authenticator app for 2FA - not SMS. These two changes eliminate the most common paths attackers use to take over accounts.');
+}
+
+
+
+/* MODULE 04: OSINT */
+const OSINT_POSTS = [
+  { id:'pet', time:'2 days ago', likes:47, comments:12, imgUrl:'https://picsum.photos/seed/goldendog5/600/400',
+    caption:'My little guy <span class="osint-tag" onclick="osintClick(\'pet\',this)">Biscuit</span> turns 5 today! Best dog ever. &#128021; #dogsofinstagram #birthday',
+    key:'pet', value:'Biscuit', label:'Pet name', sq:'What is your pet\'s name?' },
+  { id:'bday', time:'3 weeks ago', likes:134, comments:28, imgUrl:'https://picsum.photos/seed/birthdayparty22/600/400',
+    caption:'<span class="osint-tag" onclick="osintClick(\'bday\',this)">28 today!</span> Can\'t believe another year has passed. &#127874; Big birthday dinner with the crew tonight! #birthday #28',
+    key:'bday', value:'March 14, 1997', label:'Date of birth', sq:'What is your date of birth?' },
+  { id:'school', time:'2 months ago', likes:89, comments:15, imgUrl:'https://picsum.photos/seed/graduationday15/600/400',
+    caption:'Throwback to <span class="osint-tag" onclick="osintClick(\'school\',this)">Richmond High School graduation, class of 2015!</span> Go Eagles! &#129413; Still the best years of my life.',
+    key:'school', value:'Richmond High, 2015', label:'School & graduation year', sq:'What high school did you attend?' },
+  { id:'employer', time:'4 months ago', likes:203, comments:41, imgUrl:'https://picsum.photos/seed/officeteam18/600/400',
+    caption:'Officially <span class="osint-tag" onclick="osintClick(\'employer\',this)">3 years at Meridian Financial!</span> Love this team so much. &#128153; #work #anniversary',
+    key:'employer', value:'Meridian Financial', label:'Employer', sq:'Where do you work?' },
+  { id:'car', time:'6 months ago', likes:312, comments:67, imgUrl:'https://picsum.photos/seed/sportscarred/600/400',
+    caption:'Finally did it - <span class="osint-tag" onclick="osintClick(\'car\',this)">2018 Ford Mustang!</span> Dream car unlocked. &#128663;&#128168; #mustang #cars #goals',
+    key:'car', value:'2018 Ford Mustang', label:'First car', sq:'What was your first car?' },
+  { id:'mum', time:'8 months ago', likes:156, comments:33, imgUrl:'https://picsum.photos/seed/pinkflowersbouquet/600/400',
+    caption:'Happy birthday to the best mum in the world, <span class="osint-tag" onclick="osintClick(\'mum\',this)">Sandra</span>! &#10084;&#65039; So lucky to have you. #happybirthday #family',
+    key:'mum', value:'Sandra', label:'Mother name', sq:"What is your mother's first name?" },
+  { id:'location', time:'1 year ago', likes:78, comments:19, imgUrl:'https://picsum.photos/seed/londonapartment7/600/400',
+    caption:'New flat in <span class="osint-tag" onclick="osintClick(\'location\',this)">Shoreditch</span>! Finally got the keys. &#127968; East London living! #london #newplace',
+    key:'location', value:'Shoreditch, London', label:'Home location', sq:'What city do you live in?' },
+];
+
+const OSINT_RISKS = {
+  pet:      { risk:'Pet names are a top security question answer. Attackers scan social media for pet names before calling support lines to take over accounts.', sq:'What is your pet\'s name?' },
+  bday:     { risk:'Date of birth is used to verify identity with banks, phone carriers, and government services - making it one of the most valuable data points for account takeover.', sq:'What is your date of birth?' },
+  school:   { risk:'High school name and graduation year can answer security questions and help attackers build a complete identity profile used in account recovery scams.', sq:'What high school did you attend?' },
+  employer: { risk:'Knowing your employer enables targeted spear-phishing emails that appear to come from IT or colleagues. Also used to bypass employment verification checks.', sq:'Where do you work?' },
+  car:      { risk:'First car is among the most common security question answers used by banks and email providers. Posting it publicly hands attackers a free answer.', sq:'What was your first car?' },
+  mum:      { risk:"Mother's first name is a standard security question across banks and government portals. Family member names in captions are a direct gift to attackers.", sq:"What is your mother's first name?" },
+  location: { risk:'Home location enables address-based identity verification bypass. Combined with DOB and name, attackers can impersonate you to banks and utilities.', sq:'What city do you live in?' },
+};
+
+let osintFound = {};
+let osintModalPost = null;
+
+function initOSINT() {
+  osintFound = {};
+  osintModalPost = null;
+  document.getElementById('osint-counter').className = 'osint-counter';
+  document.getElementById('osint-counter-count').textContent = '0';
+  document.getElementById('osint-counter-sub').textContent = 'of 7 risks found';
+  document.getElementById('osint-counter-reveal-btn').className = 'osint-counter-reveal-btn';
+  document.getElementById('osint-results-overlay').className = 'osint-results-overlay';
+  document.getElementById('ig-modal').className = 'ig-modal';
+  const grid = document.getElementById('osint-grid');
+  grid.innerHTML = '';
+  OSINT_POSTS.forEach((p,i) => {
+    const item = document.createElement('div');
+    item.className = 'ig-grid-item';
+    item.id = 'ig-grid-'+p.id;
+    item.innerHTML = `<img src="${p.imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'">
+      <div class="ig-grid-overlay">&#128077; ${p.likes} &nbsp; &#128172; ${p.comments}</div>
+      <div class="ig-found-badge">&#10003;</div>`;
+    item.style.animationDelay = (i*0.05)+'s';
+    item.addEventListener('click', () => openIgPost(p.id));
+    grid.appendChild(item);
+  });
+}
+
+function openIgPost(id) {
+  const p = OSINT_POSTS.find(x=>x.id===id);
+  if (!p) return;
+  osintModalPost = p;
+  document.getElementById('ig-modal-photo').src = p.imgUrl;
+  document.getElementById('ig-modal-time').textContent = p.time + ' \u00b7 \uD83C\uDF10 Public';
+  document.getElementById('ig-modal-caption').innerHTML = p.caption;
+  document.getElementById('ig-modal-likes').textContent = '\uD83D\uDC4D ' + p.likes + ' likes';
+  document.getElementById('ig-modal-comments').textContent = '\uD83D\uDCAC ' + p.comments + ' comments';
+  document.getElementById('ig-modal').className = 'ig-modal open';
+}
+
+function closeIgModal() {
+  document.getElementById('ig-modal').className = 'ig-modal';
+  osintModalPost = null;
+}
+
+document.addEventListener('click', e => {
+  if (e.target === document.getElementById('ig-modal')) closeIgModal();
+});
+
+function osintClick(key, el) {
+  if (osintFound[key]) return;
+  const post = OSINT_POSTS.find(p=>p.key===key);
+  if (!post) return;
+  const risk = OSINT_RISKS[key];
+  osintFound[key] = { value:post.value, label:post.label, risk:risk.risk, sq:risk.sq };
+  el.classList.add('revealed');
+  el.onclick = null;
+  document.getElementById('ig-grid-'+post.id).classList.add('found');
+  const count = Object.keys(osintFound).length;
+  const counter = document.getElementById('osint-counter');
+  counter.className = 'osint-counter visible';
+  document.getElementById('osint-counter-count').textContent = count;
+  document.getElementById('osint-counter-sub').textContent = 'of 7 risks found';
+  if (count >= 4) document.getElementById('osint-counter-reveal-btn').className = 'osint-counter-reveal-btn show';
+}
+
+function osintReveal() {
+  closeIgModal();
+  const found = Object.keys(osintFound).length;
+  const score = Math.round(found / OSINT_POSTS.length * 100);
+  const col = score>=80?'var(--accent)':score>=50?'var(--warning)':'var(--danger)';
+  document.getElementById('osint-results-fraction').textContent = found + ' / 7';
+  document.getElementById('osint-results-fraction').style.color = col;
+  document.getElementById('osint-results-score-lbl').textContent = score + ' / 100 security score';
+  const list = document.getElementById('osint-vuln-list');
+  list.innerHTML = '';
+  OSINT_POSTS.forEach((p,i) => {
+    const f = osintFound[p.key];
+    const risk = OSINT_RISKS[p.key];
+    const card = document.createElement('div');
+    card.className = 'osint-vuln-card' + (f?'':' not-found');
+    card.style.animationDelay = (i*0.06)+'s';
+    card.innerHTML = `<div class="osint-vuln-hd">
+      <div class="osint-vuln-label ${f?'':'not-found'}">${p.label}</div>
+      <div class="osint-vuln-found-badge ${f?'found':'missed'}">${f?'FOUND':'MISSED'}</div>
+    </div>
+    <div class="osint-vuln-value ${f?'':'not-found'}">${f?f.value:'Not identified'}</div>
+    <div class="osint-vuln-risk">${risk.risk}</div>
+    <div class="osint-vuln-sq">Security question: "${risk.sq}"</div>`;
+    list.appendChild(card);
+  });
+  document.getElementById('osint-complete-btn').onclick = () => {
+    document.getElementById('osint-results-overlay').className = 'osint-results-overlay';
+    completeModule('osint', score, 'Everything you post publicly is potential ammunition for an attacker. Set profiles to private, audit your public posts, and never use real answers for security questions - use random answers stored in a password manager.');
+  };
+  document.getElementById('osint-results-overlay').className = 'osint-results-overlay open';
+}
+</script>
+</body>
+</html>

@@ -2,8 +2,12 @@
 node_modules
 dist
 
+<<<<<<< Updated upstream
 
 package-lock.json
 package.json
 
 test
+=======
+.claude/settings.local.json
+>>>>>>> Stashed changes
