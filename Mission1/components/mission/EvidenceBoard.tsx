@@ -61,9 +61,9 @@ export function EvidenceBoard({ artifacts, selectedId, tags, onSelect }: Evidenc
       <div className="flex items-end justify-between gap-3 border-b border-dossier-border pb-4">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-dossier-muted">
-            Evidence board
+            Evidence list
           </p>
-          <p className="mt-1 text-sm text-dossier-text">Artifact queue</p>
+          <p className="mt-1 text-sm text-dossier-text">Click to inspect — classify on the right</p>
         </div>
         <p className="font-mono text-[11px] text-dossier-muted">{artifacts.length} items</p>
       </div>

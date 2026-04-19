@@ -58,7 +58,10 @@ export function ArtifactChallenge({ artifact, disabled }: ArtifactChallengeProps
   return (
     <div className="rounded-lg border border-dossier-accent/20 bg-dossier-accent/5 p-4">
       <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-dossier-accent">
-        AI challenge (this run)
+        Extra prompt (optional)
+      </p>
+      <p className="mt-1 text-[11px] text-dossier-muted">
+        Does not replace your classification — use it as a thinking aid.
       </p>
       <p className="mt-2 text-sm leading-relaxed text-dossier-text">{q}</p>
       {listenSrc && !disabled ? (

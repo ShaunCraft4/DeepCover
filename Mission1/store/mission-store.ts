@@ -152,7 +152,11 @@ export const useMissionStore = create<MissionState>((set, get) => ({
     let sessionHints: string | null = null;
 
     try {
-      const resp = await fetch("/mission1/api/mission/session", { method: "POST" });
+      const resp = await fetch("/mission1/api/mission/session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ runId: crypto.randomUUID() }),
+      });
       if (resp.ok) {
         const data = (await resp.json()) as {
           sessionObjective?: string;

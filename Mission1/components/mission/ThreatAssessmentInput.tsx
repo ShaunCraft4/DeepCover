@@ -19,7 +19,7 @@ export function ThreatAssessmentInput({
     <div className="space-y-3">
       <div>
         <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-dossier-muted">
-          Final threat assessment
+          Threat assessment (required to submit)
         </p>
         <p className="mt-2 text-sm text-dossier-text">{question}</p>
       </div>
@@ -27,13 +27,10 @@ export function ThreatAssessmentInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        placeholder="Synthesize the narrative mechanics: who benefits, what truth is being obscured, and how the synthetic artifacts cooperate with the real ones."
-        className="min-h-[140px] resize-none font-sans text-sm"
+        placeholder="Short paragraphs are fine. Tie your answer to what you saw in the artifacts."
+        className="min-h-[120px] resize-none font-sans text-sm"
       />
-      <div className="flex items-center justify-between font-mono text-[10px] text-dossier-muted">
-        <span>Autosave: local session only</span>
-        <span>{value.trim().length} chars</span>
-      </div>
+      <p className="font-mono text-[10px] text-dossier-muted">Saved in this browser tab only</p>
     </div>
   );
 }

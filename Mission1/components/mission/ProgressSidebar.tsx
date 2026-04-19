@@ -33,9 +33,8 @@ export function ProgressSidebar({ tags, artifactTotal }: ProgressSidebarProps) {
           transition={{ type: "spring", stiffness: 220, damping: 26 }}
         />
       </div>
-      <p className="mt-3 text-xs text-dossier-muted">
-        Classify every artifact, then write the threat assessment—both are required to submit.
-        Uncertainty is valid: use UNCERTAIN when the evidence does not justify a hard call.
+      <p className="mt-2 text-[11px] leading-snug text-dossier-muted">
+        Bar fills as you tag items. Assessment is tracked separately in the checklist above.
       </p>
     </div>
   );

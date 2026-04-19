@@ -16,11 +16,11 @@ type TagSelectorProps = {
 export function TagSelector({ value, onChange, disabled }: TagSelectorProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
+      <div>
         <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-dossier-muted">
-          Classification
+          Classification (selected artifact)
         </p>
-        <p className="font-mono text-[10px] text-dossier-muted">Commit tag</p>
+        <p className="mt-1 text-xs text-dossier-muted">Pick one label before moving to the next item.</p>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

@@ -9,6 +9,13 @@
   --dossier-text: #f0f0f0;
   --dossier-muted: #888888;
   --dossier-border: #1e1e1e;
+  --bg: #050505;
+  --panel: #111111;
+  --accent: #00ff9d;
+  --text-primary: #f0f0f0;
+  --text-secondary: #888888;
+  --text-muted: #444444;
+  --border: #1e1e1e;
 }
 
 body {
@@ -17,6 +24,55 @@ body {
 }
 
 @layer utilities {
+  .mission2-radar-sweep {
+    animation: radarSweep 14s linear infinite;
+  }
+  .mission2-scan-line {
+    animation: scanLine 3s linear infinite;
+  }
+  .mission2-tension-pulse {
+    animation: tensionPulse 1.8s ease-in-out infinite;
+  }
+  .animate-fade-slide-up {
+    animation: fadeSlideUp 0.7s ease forwards;
+  }
+
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes scanLine {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes radarSweep {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes tensionPulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(0, 255, 157, 0);
+    }
+  }
+
   .text-balance {
     text-wrap: balance;
   }

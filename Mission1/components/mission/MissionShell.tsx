@@ -11,6 +11,7 @@ import { DebriefReveal } from "./DebriefReveal";
 import { EvidenceBoard } from "./EvidenceBoard";
 import { MediaViewer } from "./MediaViewer";
 import { MissionBriefing } from "./MissionBriefing";
+import { MissionChecklist } from "./MissionChecklist";
 import { ArtifactChallenge } from "./ArtifactChallenge";
 import { MissionTimer } from "./MissionTimer";
 import { ProgressSidebar } from "./ProgressSidebar";
@@ -101,77 +102,87 @@ export function MissionShell() {
 
       <DebriefReveal open={phase === "debrief"} result={debrief} onClose={closeDebrief} />
 
-      <main className="relative mx-auto max-w-[1600px] px-4 py-6 md:px-6">
-        <div className="grid min-h-[calc(100vh-88px)] grid-cols-1 gap-4 xl:grid-cols-[360px_1fr_360px]">
-          <section className="glass-panel relative overflow-hidden rounded-xl p-4 md:p-5">
-            <div className="pointer-events-none absolute inset-0 opacity-25 scanlines" />
-            <div className="relative min-h-0">
-              <EvidenceBoard
-                artifacts={artifacts}
-                selectedId={selectedId}
-                tags={tags}
-                onSelect={selectArtifact}
-              />
+      {phase !== "briefing" ? (
+        <main className="relative mx-auto max-w-[1600px] px-4 py-6 md:px-6">
+          <div className="space-y-4">
+            <MissionChecklist
+              phase={phase}
+              artifactTotal={artifacts.length}
+              taggedCount={nTagged}
+              assessmentChars={assessment.trim().length}
+            />
+            <div className="grid min-h-[calc(100vh-88px)] grid-cols-1 gap-4 xl:grid-cols-[360px_1fr_360px]">
+              <section className="glass-panel relative overflow-hidden rounded-xl p-4 md:p-5">
+                <div className="pointer-events-none absolute inset-0 opacity-20 scanlines" />
+                <div className="relative min-h-0">
+                  <EvidenceBoard
+                    artifacts={artifacts}
+                    selectedId={selectedId}
+                    tags={tags}
+                    onSelect={selectArtifact}
+                  />
+                </div>
+              </section>
+
+              <section className="min-h-[520px]">
+                <MediaViewer artifact={selected} phase={phase} />
+              </section>
+
+              <section className="glass-panel relative overflow-hidden rounded-xl p-4 md:p-5">
+                <div className="pointer-events-none absolute inset-0 opacity-20 scanlines" />
+                <div className="relative flex h-full flex-col gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <MissionTimer />
+                    <ProgressSidebar tags={tags} artifactTotal={artifacts.length} />
+                  </div>
+
+                  <ArtifactChallenge artifact={selected} disabled={phase !== "operations"} />
+
+                  <div className="rounded-lg border border-dossier-border bg-dossier-panel/25 p-4">
+                    <TagSelector
+                      value={selected ? (tags[selected.id] ?? null) : null}
+                      onChange={(tag) => {
+                        if (!selected) return;
+                        setTag(selected.id, tag);
+                      }}
+                      disabled={!selected || phase !== "operations"}
+                    />
+                  </div>
+
+                  <ThreatAssessmentInput
+                    question={assessmentQuestion}
+                    value={assessment}
+                    onChange={setAssessment}
+                    disabled={phase !== "operations"}
+                  />
+
+                  <div className="mt-auto space-y-2 border-t border-dossier-border pt-4">
+                    <Button
+                      type="button"
+                      className="w-full font-semibold"
+                      disabled={!canSubmit || phase !== "operations" || submitting}
+                      onClick={submitMission}
+                    >
+                      {submitting ? "Submitting…" : "Submit mission package"}
+                    </Button>
+                    {phase === "operations" && !canSubmit ? (
+                      <p className="text-balance text-center text-xs leading-relaxed text-dossier-muted">
+                        {!tagsComplete
+                          ? `Finish classifying each artifact (${nTagged}/${artifacts.length}). `
+                          : null}
+                        {assessment.trim().length === 0 ? "Add your threat assessment above." : null}
+                      </p>
+                    ) : null}
+                    <p className="text-center font-mono text-[10px] text-dossier-muted">
+                      Submit locks your tags for this run
+                    </p>
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
-
-          <section className="min-h-[520px]">
-            <MediaViewer artifact={selected} />
-          </section>
-
-          <section className="glass-panel relative overflow-hidden rounded-xl p-4 md:p-5">
-            <div className="pointer-events-none absolute inset-0 opacity-25 scanlines" />
-            <div className="relative flex h-full flex-col gap-5">
-              <MissionTimer />
-              <ProgressSidebar tags={tags} artifactTotal={artifacts.length} />
-
-              <ArtifactChallenge artifact={selected} disabled={phase !== "operations"} />
-
-              <div className="rounded-lg border border-dossier-border bg-dossier-panel/25 p-4">
-                <TagSelector
-                  value={selected ? (tags[selected.id] ?? null) : null}
-                  onChange={(tag) => {
-                    if (!selected) return;
-                    setTag(selected.id, tag);
-                  }}
-                  disabled={!selected || phase !== "operations"}
-                />
-              </div>
-
-              <ThreatAssessmentInput
-                question={assessmentQuestion}
-                value={assessment}
-                onChange={setAssessment}
-                disabled={phase !== "operations"}
-              />
-
-              <div className="mt-auto space-y-2 border-t border-dossier-border pt-4">
-                <Button
-                  type="button"
-                  className="w-full font-semibold"
-                  disabled={!canSubmit || phase !== "operations" || submitting}
-                  onClick={submitMission}
-                >
-                  {submitting ? "Submitting…" : "Submit mission package"}
-                </Button>
-                {phase === "operations" && !canSubmit ? (
-                  <p className="text-balance text-center text-xs leading-relaxed text-dossier-muted">
-                    {!tagsComplete
-                      ? `Select each artifact in the evidence rail and choose REAL, SYNTHETIC, or UNCERTAIN (${nTagged}/${artifacts.length} classified). `
-                      : null}
-                    {assessment.trim().length === 0
-                      ? "Add text in the threat assessment box above."
-                      : null}
-                  </p>
-                ) : null}
-                <p className="text-center font-mono text-[10px] text-dossier-muted">
-                  Submission locks your tags for this pass
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+          </div>
+        </main>
+      ) : null}
     </div>
   );
 }
