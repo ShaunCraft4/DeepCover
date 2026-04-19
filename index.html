@@ -928,6 +928,34 @@
     color:var(--text-secondary);
     line-height:1.5;
   }
+  .campaign-progress-actions{
+    margin-top:.75rem;
+    max-width:520px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .campaign-cert-btn{
+    font-family:var(--mono);
+    font-size:.62rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:rgba(0,255,157,.08);
+    border:1px solid rgba(0,255,157,.35);
+    padding:.55rem .9rem;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .campaign-cert-btn:hover:not(:disabled){
+    background:rgba(0,255,157,.14);
+    border-color:rgba(0,255,157,.55);
+  }
+  .campaign-cert-btn:disabled{
+    color:var(--text-muted);
+    border-color:var(--border2);
+    background:rgba(0,0,0,.3);
+    cursor:not-allowed;
+  }
 
   .mission-select-grid{
     display:grid;

@@ -23,8 +23,8 @@ function caughtCount(decisions, t) {
  * @param {HTMLElement} root
  */
 export function mountDebrief(root) {
-  markMission2FirewallComplete();
   const state = getState();
+  markMission2FirewallComplete(state.score);
   const packets = state.packets;
   const decisions = state.decisions;
   const score = Math.max(0, Math.min(100, Math.round(state.score)));

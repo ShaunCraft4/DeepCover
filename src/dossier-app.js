@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { jsPDF } from 'jspdf';
 import {
   CAMPAIGN_CONGRATS_KEY,
   CAMPAIGN_PROGRESS_EVENT,
@@ -135,6 +136,124 @@ function setOperativeEmail(user) {
   bar.append(line, br, em);
 }
 
+function readOperativeName() {
+  const em = document.querySelector('#dossier-user-email strong');
+  const raw = String(em?.textContent || 'AGENT CALLSIGN').trim();
+  if (!raw || raw === 'Operative') return 'AGENT CALLSIGN';
+  const base = raw.includes('@') ? raw.split('@')[0] : raw;
+  return base.replace(/[._-]+/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase() || 'AGENT CALLSIGN';
+}
+
+function toPercent(best, max) {
+  if (typeof best !== 'number' || typeof max !== 'number' || max <= 0) return null;
+  return Math.max(0, Math.min(100, Math.round((best / max) * 100)));
+}
+
+function getUnitScores(p) {
+  const m1 =
+    typeof p.m1Score === 'number'
+      ? Math.max(0, Math.min(100, Math.round(p.m1Score)))
+      : toPercent(p.m1BestScore, p.m1Max);
+  return {
+    m1,
+    m2: typeof p.m2Score === 'number' ? Math.max(0, Math.min(100, Math.round(p.m2Score))) : null,
+    m3: typeof p.m3Score === 'number' ? Math.max(0, Math.min(100, Math.round(p.m3Score))) : null,
+  };
+}
+
+function drawScoreRow(doc, label, value, y, accent = [0, 255, 157]) {
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(136, 136, 136);
+  doc.text(label, 20, y);
+  doc.setFillColor(30, 30, 30);
+  doc.roundedRect(88, y - 5, 88, 4.8, 1.8, 1.8, 'F');
+  if (typeof value === 'number') {
+    const w = Math.max(1.8, (88 * value) / 100);
+    doc.setFillColor(accent[0], accent[1], accent[2]);
+    doc.roundedRect(88, y - 5, w, 4.8, 1.8, 1.8, 'F');
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(accent[0], accent[1], accent[2]);
+    doc.text(String(value).padStart(2, '0') + '/100', 183, y);
+  } else {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(68, 68, 68);
+    doc.text('PENDING', 183, y);
+  }
+}
+
+function downloadCertificate() {
+  const p = readCampaignProgress();
+  const pct = getCampaignPercent(p);
+  const name = readOperativeName();
+  const scores = getUnitScores(p);
+  const scoreList = [scores.m1, scores.m2, scores.m3].filter((n) => typeof n === 'number');
+  const avg = scoreList.length ? Math.round(scoreList.reduce((a, b) => a + b, 0) / scoreList.length) : 0;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  doc.setFillColor(5, 5, 5);
+  doc.rect(0, 0, 297, 210, 'F');
+  doc.setDrawColor(30, 30, 30);
+  doc.setLineWidth(0.5);
+  doc.rect(8, 8, 281, 194);
+  doc.setDrawColor(0, 255, 157);
+  doc.setLineWidth(0.9);
+  doc.rect(10, 10, 277, 190);
+
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(0, 255, 157);
+  doc.text('DOSSIER CERTIFICATE OF COMPLETION', 148.5, 28, { align: 'center' });
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(68, 68, 68);
+  doc.text('INTELLIGENCE TRAINING DIVISION', 148.5, 34, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(136, 136, 136);
+  doc.text('This certifies that operative', 148.5, 52, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  doc.setTextColor(240, 240, 240);
+  doc.text(name, 148.5, 64, { align: 'center' });
+  doc.setDrawColor(42, 42, 42);
+  doc.line(74, 68, 223, 68);
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(136, 136, 136);
+  doc.text('has completed all active training units with the following mission scores:', 148.5, 76, {
+    align: 'center',
+  });
+
+  drawScoreRow(doc, 'MISSION 01  DEEPFAKE DETECTION', scores.m1, 94, [0, 255, 157]);
+  drawScoreRow(doc, 'MISSION 02  COUNTER-INTEL FIREWALL', scores.m2, 106, [0, 212, 255]);
+  drawScoreRow(doc, 'MISSION 03  CYBER DEFENSE', scores.m3, 118, [255, 184, 0]);
+
+  doc.setDrawColor(30, 30, 30);
+  doc.line(20, 128, 277, 128);
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(136, 136, 136);
+  doc.text('OVERALL CAMPAIGN SCORE', 20, 138);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(0, 255, 157);
+  doc.text(String(avg) + '/100', 82, 138);
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(68, 68, 68);
+  doc.text(`Issued: ${new Date().toISOString().slice(0, 10)}  ·  Training Progress: ${pct}%`, 20, 182);
+  doc.text('DOSSIER // CLASSIFIED TRAINING RECORD', 277, 182, { align: 'right' });
+
+  const safeName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  doc.save(`dossier-certificate-${safeName || 'operative'}.pdf`);
+}
+
 function renderCampaignProgressBar() {
   const wrap = document.getElementById('dossier-campaign-progress');
   if (!wrap) return;
@@ -204,6 +323,18 @@ function renderCampaignProgressBar() {
     cap.textContent = `Milestones cleared: ${filled} of 3 (${pct}% overall).`;
   }
   wrap.appendChild(cap);
+
+  const actionRow = document.createElement('div');
+  actionRow.className = 'campaign-progress-actions';
+  const certBtn = document.createElement('button');
+  certBtn.type = 'button';
+  certBtn.className = 'campaign-cert-btn';
+  certBtn.textContent = 'Download Certificate';
+  certBtn.disabled = false;
+  certBtn.title = 'Download your training certificate';
+  certBtn.addEventListener('click', downloadCertificate);
+  actionRow.appendChild(certBtn);
+  wrap.appendChild(actionRow);
 
   if (pct >= 100) {
     const banner = document.createElement('div');

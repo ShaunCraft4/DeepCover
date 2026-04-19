@@ -3,7 +3,7 @@
 import { useLayoutEffect, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MISSION_BRIEF } from "@/data/mission1-mock";
-import { markMission1Perfect } from "@/lib/campaign-progress";
+import { markMission1Perfect, markMission1Score } from "@/lib/campaign-progress";
 import { taggedCount, useMissionStore } from "@/store/mission-store";
 
 import { ConsoleHeader } from "./ConsoleHeader";
@@ -80,11 +80,21 @@ export function MissionShell() {
 
   const continueToMission2 = () => {
     const d = useMissionStore.getState().debrief;
-    if (!d || d.max <= 0 || d.total < d.max) return;
+    if (!d || d.max <= 0) return;
+    markMission1Score(d.total, d.max);
+    if (d.total < d.max) return;
     markMission1Perfect(d.total, d.max);
     useMissionStore.setState({ phase: "briefing", debrief: null, submitting: false });
     /** Standalone Mission2 Vite app at `/Mission2/index.html`, not Next `/mission1/mission2`. */
     window.location.assign(new URL("/Mission2/index.html", window.location.origin).href);
+  };
+
+  const closeDebriefAndRecord = () => {
+    const d = useMissionStore.getState().debrief;
+    if (d && d.max > 0) {
+      markMission1Score(d.total, d.max);
+    }
+    closeDebrief();
   };
 
   return (
@@ -113,7 +123,7 @@ export function MissionShell() {
       <DebriefReveal
         open={phase === "debrief"}
         result={debrief}
-        onClose={closeDebrief}
+        onClose={closeDebriefAndRecord}
         onContinueToMission2={continueToMission2}
       />
 

@@ -36,7 +36,7 @@ export default function Mission2DebriefPage() {
       <DebriefReveal
         payload={payload}
         onExit={() => {
-          markMission2Complete();
+          markMission2Complete(payload.score);
           resetMission();
           router.push("/mission3");
         }}

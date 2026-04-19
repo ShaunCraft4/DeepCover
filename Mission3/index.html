@@ -800,6 +800,19 @@ function showOverall() {
     </div>`;
   });
   const avg = count ? Math.round(total / count) : 0;
+  try {
+    var KEY = 'deepcover_campaign_v1';
+    var EVT = 'deepcover-campaign-progress';
+    var raw = localStorage.getItem(KEY);
+    var p = raw ? JSON.parse(raw) : {};
+    p.m3Score = avg;
+    p.m3Complete = true;
+    p.m3Reached = true;
+    p.updatedAt = new Date().toISOString();
+    localStorage.setItem(KEY, JSON.stringify(p));
+    window.dispatchEvent(new CustomEvent(EVT));
+    campaignM3Synced = true;
+  } catch (e) {}
   document.getElementById('overall-total').textContent = avg + '/100';
   const grade = avg >= 90 ? 'S' : avg >= 75 ? 'A' : avg >= 55 ? 'B' : avg >= 35 ? 'C' : 'F';
   const msgs = { S:'Elite - Outstanding security awareness.', A:'Strong - Well-trained defender.', B:'Competent - Some gaps remain.', C:'Developing - Review the modules again.', F:'At Risk - Significant vulnerabilities identified.' };

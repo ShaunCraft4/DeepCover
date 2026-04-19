@@ -11,9 +11,14 @@ function readRaw() {
   }
 }
 
-export function markMission2FirewallComplete() {
+export function markMission2FirewallComplete(score) {
   try {
-    const next = { ...readRaw(), m2Complete: true, updatedAt: new Date().toISOString() };
+    const next = {
+      ...readRaw(),
+      m2Complete: true,
+      ...(typeof score === 'number' ? { m2Score: Math.max(0, Math.min(100, Math.round(score))) } : {}),
+      updatedAt: new Date().toISOString(),
+    };
     localStorage.setItem(KEY, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent(EVT));
   } catch (e) {
